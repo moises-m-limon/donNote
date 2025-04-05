@@ -1,0 +1,9 @@
+name: donNote
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - requests
+  - pip
+  - pip:
+    - python-dotenv
