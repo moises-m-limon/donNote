@@ -7,3 +7,5 @@
 frontend/node_modules
 frontend/.next
 frontend/pnpm-lock.yaml
+
+backend/__pycache__
