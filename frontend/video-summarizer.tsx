@@ -15,6 +15,7 @@ import {
   ListChecks,
   RefreshCw,
   ThumbsUp,
+  LogIn,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,6 +27,14 @@ interface Course {
   course_code: string;
 }
 
+// Define the Google user type
+interface GoogleUser {
+  name: string;
+  email: string;
+  picture: string;
+  sub: string;
+}
+
 export default function VideoSummarizer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [courses, setCourses] = useState<Course[]>([]);
@@ -35,10 +44,30 @@ export default function VideoSummarizer() {
   const [summaryType, setSummaryType] = useState("concise");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<GoogleUser | null>(null);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const storedUser = localStorage.getItem("googleUser");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Error parsing stored user:", e);
+        setUser(null);
+      }
+    }
+  }, []);
 
   // Fetch courses from the backend
   useEffect(() => {
     const fetchCourses = async () => {
+      // Only fetch courses if user is logged in
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         const response = await fetch("http://127.0.0.1:5000/api/courses");
@@ -59,7 +88,7 @@ export default function VideoSummarizer() {
     };
 
     fetchCourses();
-  }, []);
+  }, [user]);
 
   // Filter courses based on search query
   const filteredCourses = courses.filter(
@@ -117,7 +146,24 @@ export default function VideoSummarizer() {
           </div>
         </header>
 
-        {!selectedCourse ? (
+        {!user ? (
+          // Not logged in view
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="bg-[#2a3270] border-[#7de2d1] p-8 rounded-lg max-w-md w-full text-center">
+              <LogIn className="h-16 w-16 mx-auto text-[#7de2d1] mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Please Log In</h2>
+              <p className="text-white/70 mb-6">
+                You need to be logged in with your Google account to view your
+                courses.
+              </p>
+              <Link href="/">
+                <Button className="bg-[#f9e94e] text-[#1e2761] hover:bg-[#e9d93e]">
+                  Go to Login Page
+                </Button>
+              </Link>
+            </div>
+          </div>
+        ) : !selectedCourse ? (
           // Course selection view
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row gap-4">
