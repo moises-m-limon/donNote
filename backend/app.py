@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
+from utils import get_favorite_courses
 
 # Load environment variables
 load_dotenv()
@@ -14,6 +15,9 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
+
+token = os.getenv("CAVNAS_API_KEY")
+CANVAS_BASE_URL = "https://usfca.instructure.com/"
 
 app = Flask(__name__)
 
@@ -32,7 +36,6 @@ def home():
         return jsonify({"message": "Note created successfully"}), 201
     elif request.method == 'GET':
         return jsonify({"message": "Notes fetched successfully"}), 200
-
 
 class File:
     def __init__(self, userId, file_content, file_name=None):
@@ -108,5 +111,32 @@ def get_file():
         return jsonify({"message":"No files found"}), 500
         
             
+@app.route('/api/courses', methods=['GET'])
+def get_courses():
+    if request.method == 'GET':
+        try:
+            # Get the courses data
+            courses = get_favorite_courses(CANVAS_BASE_URL, token)
+            # Extract course names and IDs
+            course_list = []
+            for course in courses:
+                course_list.append({
+                    "id": course.get("id"),
+                    "name": course.get("name"),
+                    "course_code": course.get("course_code")
+                })
+
+            return jsonify({
+                "message": "Courses fetched successfully",
+                "courses": course_list
+            }), 200
+        except Exception as e:
+            print(f"Error fetching courses: {str(e)}")
+            return jsonify({
+                "message": "Failed to fetch courses",
+                "error": str(e)
+            }), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
