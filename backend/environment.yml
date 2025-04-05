@@ -7,3 +7,6 @@ dependencies:
   - pip
   - pip:
     - python-dotenv
+    - supabase
+    - flask
+    - requests
