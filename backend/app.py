@@ -53,7 +53,7 @@ class File:
             'file_name': self.file_name,
         }
 
-@app.route('/files', methods=['POST'])
+@app.route('/users/files', methods=['POST'])
 def create_file():
     try:
         data = request.json
@@ -93,6 +93,20 @@ def create_file():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+@app.route('/users', methods=['POST'])
+def get_file():
+    try:
+        data = request.json
+        user_id = data.get('userId')
+        files = supabase.storage.from_('donshack2025').list('users/'+user_id)
+        print(files)
+        if len(files) == 0:
+            return jsonify({"message":"No files found"}), 404
+        return jsonify(files), 200
+    except Exception as e:
+        return jsonify({"message":"No files found"}), 500
+        
+            
 if __name__ == '__main__':
     app.run(debug=True)
