@@ -407,12 +407,6 @@ export default function EnhancedNoteTab() {
                       >
                         <div className="truncate flex-1">
                           <span className="font-medium">{note.title}</span>
-                          <div className="text-xs opacity-70">
-                            {note.mode === "bigpicture"
-                              ? "Big Picture"
-                              : "Detailed"}{" "}
-                            • {new Date().toLocaleDateString()}
-                          </div>
                         </div>
                         <Button
                           variant="ghost"
@@ -536,22 +530,6 @@ export default function EnhancedNoteTab() {
                   onValueChange={setNoteMode}
                   className="w-full"
                 >
-                  <TabsList className="bg-[#1e2761]/20 w-full justify-end rounded-none border-b border-[#7de2d1]/20">
-                    <TabsTrigger
-                      value="detailed"
-                      className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
-                    >
-                      <List className="h-4 w-4 mr-1" />
-                      Detailed
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="bigpicture"
-                      className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
-                    >
-                      <Layers className="h-4 w-4 mr-1" />
-                      Big Picture
-                    </TabsTrigger>
-                  </TabsList>
                   <TabsContent value="detailed" className="m-0">
                     <div className="p-4 bg-white/5 min-h-[500px]">
                       <Textarea

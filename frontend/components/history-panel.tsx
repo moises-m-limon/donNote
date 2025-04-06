@@ -58,10 +58,11 @@ export default function HistoryPanel() {
       <div className="p-4 border-b border-[#7de2d1]/20 flex justify-between items-center">
         <div className="text-[#7de2d1] font-semibold flex items-center gap-2">
           {!isCollapsed && <>
+            <div onClick={() => setIsCollapsed(!isCollapsed)}>
             <Clock className="h-5 w-5" />
-            <span>History</span>
+            <span>History</span></div>
           </>}
-          {isCollapsed && <Clock className="h-5 w-5" />}
+          {isCollapsed && <Clock className="h-5 w-5" onClick={() => setIsCollapsed(!isCollapsed)}/>}
         </div>
         <Button 
           variant="ghost" 

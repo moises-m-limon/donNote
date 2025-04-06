@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { NotebookPen, University, ChevronLeft, ChevronRight } from "lucide-react"
+import { NotebookPen, University, ChevronLeft, ChevronRight, Compass} from "lucide-react"
 
 interface NavigationPanelProps {
     onTabChange: (tab: string) => void;
@@ -17,7 +17,11 @@ export default function NavigationPanel({ onTabChange, currentTab }: NavigationP
         <div className={`flex flex-col h-full bg-[#1e2761] text-white transition-all duration-300 relative ${isCollapsed ? 'w-[50px]' : 'w-[100px]'}`}>
             <div className="p-4 border-b border-[#7de2d1]/20 flex justify-between items-center">
                 <div className="text-[#7de2d1] font-semibold">
-                    {!isCollapsed && "Menu"}
+                    {!isCollapsed && <>
+                <div onClick={() => setIsCollapsed(!isCollapsed)}>
+                <Compass className="h-5 w-5" />
+                <span>Navigation</span></div>
+            </>}
                 </div>
                 <Button 
                     variant="ghost" 
