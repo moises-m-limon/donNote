@@ -1,27 +1,45 @@
 import os
-from flask import Flask
+from flask import Flask, Blueprint
 from flask_cors import CORS
 from flask import request, jsonify
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
+from dotenv import load_dotenv
 from utils import get_favorite_courses, get_course_files, summerize_file, summerize_text
 from google import genai
 from configs import SUMMARIZE_FILE_SYSTEM_PROMPT, SUMMARIZE_FILE_USER_PROMPT, SUPABASE_URL, SUPABASE_API_KEY, GEMINI_API_KEY, CANVAS_BASE_URL, CANVAS_TOKEN, SUMMARIZE_NOTES_USER_PROMPT, SUMMARIZE_NOTES_SYSTEM_PROMPT
 
+# Load environment variables
+load_dotenv()
 
 supabase = create_client(supabase_url=SUPABASE_URL,
                          supabase_key=SUPABASE_API_KEY)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# Start app instance
 app = Flask(__name__)
 
-CORS(app, resources={
-    r"/api/*": {"origins": "http://localhost:3000",
-                "methods": ["GET", "POST", "OPTIONS"],
-                "allow_headers": ["Content-Type"]}
-})
+# Check if we're in development or production
+prod = os.environ.get("DEV") or 'production'
+print(prod)
+
+# Configure CORS based on environment
+if prod == 'development':
+    CORS(app, resources={
+        r"/api/*": {"origins": "http://localhost:3000",
+                    "methods": ["GET", "POST", "OPTIONS"],
+                    "allow_headers": ["Content-Type"]}
+    })
+else:
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": "https://cognition-simulation-e9on.vercel.app",
+            "methods": ["GET", "POST", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    })
 
 
 @app.route('/api/notes', methods=['POST', 'GET'])
@@ -212,7 +230,6 @@ def summarize_file():
         id = data.get("id")
 
         try:
-
             # Summarize the file
             summary = summerize_text(client, str,
                                      SUMMARIZE_NOTES_USER_PROMPT, SUMMARIZE_NOTES_SYSTEM_PROMPT)
@@ -235,4 +252,9 @@ def summarize_file():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    prod = os.environ.get("DEV") or 'production'
+    if prod == 'development':
+        app.run(debug=True, use_reloader=False)
+    else:
+        app.run(debug=True, host="0.0.0.0", port=int(
+            os.environ.get("PORT", 8080)))
