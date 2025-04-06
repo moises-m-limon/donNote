@@ -1,3 +1,16 @@
+import os
+from dotenv import load_dotenv
+# Load environment variables
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Initialize Supabase client
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
+CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
+CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
+
 SUMMARIZE_SYSTEM_PROMPT = """You are an educational content analyzer specializing in creating clear, concise, and well-structured summaries of academic documents. Your task is to transform complex college-level course materials into accessible markdown summaries that maintain academic rigor while improving clarity.
 
 Follow these guidelines when creating summaries:

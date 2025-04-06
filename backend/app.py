@@ -1,25 +1,15 @@
+import os
 from flask import Flask
 from flask_cors import CORS
 from flask import request, jsonify
-import os
-from dotenv import load_dotenv
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
 from utils import get_favorite_courses, get_course_files, summerize
 from google import genai
-from prompts import SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT
+from configs import SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT, SUPABASE_URL, SUPABASE_API_KEY, GEMINI_API_KEY, CANVAS_BASE_URL, CANVAS_TOKEN
 
-# Load environment variables
-load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-# Initialize Supabase client
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
-CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
-CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 supabase = create_client(supabase_url=SUPABASE_URL,
                          supabase_key=SUPABASE_API_KEY)
 
