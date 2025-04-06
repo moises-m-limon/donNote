@@ -469,15 +469,15 @@ export default function EnhancedNoteTab() {
                     onChange={handleFileUpload}
                   />
                 </div>
-                
-                <Button
+                {/* Stretch goal*/}
+                {/* <Button
                   variant="outline"
                   className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
                   onClick={handleAssignToClass}
                 >
                   <BookmarkPlus className="mr-2 h-4 w-4" />
                   Assign to Class
-                </Button>
+                </Button> */}
 
                 <Button
                   className="w-full bg-[#7de2d1] text-[#1e2761] hover:bg-[#6dd2c1]"
@@ -485,15 +485,6 @@ export default function EnhancedNoteTab() {
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Save Note
-                </Button>
-
-                <Button
-                  className="w-full bg-[#f9e94e] text-[#1e2761] hover:bg-[#e9d93e]"
-                  onClick={submitNote}
-                  disabled={isSubmitting || !noteContent.trim()}
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Submitting..." : "Submit to Backend"}
                 </Button>
 
                 {submitStatus === "success" && (
