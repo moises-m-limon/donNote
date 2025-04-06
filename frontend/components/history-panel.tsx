@@ -42,7 +42,7 @@ export default function HistoryPanel({ setNoteContent, setNoteTitle }: HistoryPa
           return;
         }
 
-        const response = await fetch("http://127.0.0.1:5000/api/users", {
+        const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/users", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),

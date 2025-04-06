@@ -56,7 +56,7 @@ export default function Summarizer({
 
     try {
       setIsGenerating(true);
-      const response = await fetch("http://127.0.0.1:5000/api/summarize-text", {
+      const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/summarize-text", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
