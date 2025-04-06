@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Copy, Check } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import MarkdownReader from "@/components/markdown"
 
 interface SummarizerProps {
   content: string
@@ -68,6 +69,7 @@ export default function Summarizer({ content }: SummarizerProps) {
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="pb-2">
         <CardTitle>Summarizer</CardTitle>
@@ -111,6 +113,8 @@ export default function Summarizer({ content }: SummarizerProps) {
         )}
       </CardContent>
     </Card>
+    <MarkdownReader markdown={summary} />
+    </>
   )
 }
 
