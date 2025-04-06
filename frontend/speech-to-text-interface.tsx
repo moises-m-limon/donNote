@@ -23,9 +23,26 @@ import {
 // Declare SpeechRecognition interface
 declare global {
   interface Window {
-    SpeechRecognition: SpeechRecognition;
-    webkitSpeechRecognition: SpeechRecognition;
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
   }
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
 }
 
 export default function SpeechToTextInterface() {
@@ -42,7 +59,7 @@ export default function SpeechToTextInterface() {
     "idle" | "success" | "error"
   >("idle");
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -56,10 +73,11 @@ export default function SpeechToTextInterface() {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
-      recognitionRef.current.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map((result) => result[0])
-          .map((result) => result.transcript)
+      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+        const results = event.results;
+        const transcript = Array.from({ length: results.length }, (_, i) => results.item(i))
+          .map(result => result[0])
+          .map(result => result.transcript)
           .join("");
 
         if (event.results[0].isFinal) {
@@ -147,19 +165,19 @@ export default function SpeechToTextInterface() {
   const submitNote = async () => {
     if (!notes.trim()) return;
 
-    console.log(notes);
-
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/notes", {
+      const response = await fetch("/api/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          notes: notes,
+          title: noteTitle,
+          content: notes,
+          mode: noteMode,
         }),
       });
 
@@ -168,9 +186,6 @@ export default function SpeechToTextInterface() {
       }
 
       setSubmitStatus("success");
-      // Optionally clear the form after successful submission
-      // setNotes("");
-      // setNoteTitle("Untitled Note");
     } catch (error) {
       console.error("Error submitting note:", error);
       setSubmitStatus("error");
@@ -234,7 +249,7 @@ export default function SpeechToTextInterface() {
                             {note.mode === "bigpicture"
                               ? "Big Picture"
                               : "Detailed"}{" "}
-                            •{new Date().toLocaleDateString()}
+                            • {new Date().toLocaleDateString()}
                           </div>
                         </div>
                         <Button
@@ -313,7 +328,7 @@ export default function SpeechToTextInterface() {
                   disabled={isSubmitting || !notes.trim()}
                 >
                   <Send className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Submitting..." : "Submit to Backend"}
+                  {isSubmitting ? "Submitting..." : "Submit Note"}
                 </Button>
 
                 {submitStatus === "success" && (
@@ -397,7 +412,7 @@ export default function SpeechToTextInterface() {
             <div className="mt-4 text-center text-[#7de2d1] text-sm">
               <p>
                 <Sparkles className="inline h-4 w-4 mr-1" />
-                Speech-to-text powered by #CampusTech *WIT* & *ACM*
+                Speech-to-text powered by Web Speech API
               </p>
             </div>
           </div>

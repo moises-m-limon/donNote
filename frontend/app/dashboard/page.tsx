@@ -1,6 +1,4 @@
 "use client"
-
-import LandingPage from "@/landing-page"
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -21,6 +19,33 @@ export default function Home() {
     setCurrentTab(value);
   };
 
-  return <div><LandingPage /></div>
+  return <div className="flex flex-col min-h-screen bg-[#1e2761]">
+  <main className="flex-1 flex">
+    {/* Left navigation panel */}
+    <NavigationPanel onTabChange={handleTabChange} currentTab={currentTab} />
+    
+    {/* Main content area with tabs */}
+    <div className="flex-1 flex flex-col">
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="flex-1 flex flex-col">
+        <TabsContent value="notes" className="flex-1 p-0">
+          <NoteTab />
+        </TabsContent>
+        <TabsContent value="class" className="flex-1 p-0">
+          <ClassTab />
+        </TabsContent>
+      </Tabs>
+    </div>
+
+    {/* Right panel for history */}
+    <HistoryPanel />
+  </main>
+
+  {/* Voice navigation button */}
+  <VoiceNavigationButton /> 
+</div>
 }
+
+
+
+
 
