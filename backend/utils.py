@@ -217,6 +217,103 @@ def summerize_text(client, text, prompt, system_prompt):
         return {"error": str(e)}
 
 
+def generate_questions_from_file(client, file_name, prompt, system_prompt, num_questions=5):
+    try:
+        file_path = pathlib.Path(f'temp/{file_name}')
+
+        # Format the prompt with the number of questions
+        formatted_prompt = prompt.format(num_questions=num_questions)
+
+        # Generate content using the file and prompt
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt
+            ),
+            contents=[
+                types.Part.from_bytes(
+                    data=file_path.read_bytes(),
+                    mime_type='application/pdf'
+                ),
+                formatted_prompt
+            ],
+        )
+
+        # Parse the JSON response
+        try:
+            # Extract the text from the response
+            response_text = response.text
+            
+            # Try to parse the JSON from the response
+            try:
+                # Find JSON content within the response (in case there's additional text)
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', response_text)
+                if json_match:
+                    json_str = json_match.group(0)
+                    questions_data = json.loads(json_str)
+                    return questions_data
+                else:
+                    # If no JSON found, return the raw text
+                    return {"raw_text": response_text, "error": "No JSON found in response"}
+            except json.JSONDecodeError as e:
+                print(f"Error parsing JSON: {str(e)}")
+                return {"raw_text": response_text, "error": f"JSON parsing error: {str(e)}"}
+        except Exception as e:
+            print(f"Error processing response: {str(e)}")
+            return {"error": f"Failed to process response: {str(e)}"}
+
+    except Exception as e:
+        print(f"Error in question generation: {str(e)}")
+        return {"error": str(e)}
+
+
+def generate_questions_from_text(client, text, prompt, system_prompt, num_questions=5):
+    try:
+        # Format the prompt with the number of questions
+        formatted_prompt = prompt.format(num_questions=num_questions)
+
+        # Generate content using the text and prompt
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt
+            ),
+            contents=[
+                text,
+                formatted_prompt
+            ],
+        )
+
+        # Parse the JSON response
+        try:
+            # Extract the text from the response
+            response_text = response.text
+            
+            # Try to parse the JSON from the response
+            try:
+                # Find JSON content within the response (in case there's additional text)
+                import re
+                json_match = re.search(r'\{[\s\S]*\}', response_text)
+                if json_match:
+                    json_str = json_match.group(0)
+                    questions_data = json.loads(json_str)
+                    return questions_data
+                else:
+                    # If no JSON found, return the raw text
+                    return {"raw_text": response_text, "error": "No JSON found in response"}
+            except json.JSONDecodeError as e:
+                print(f"Error parsing JSON: {str(e)}")
+                return {"raw_text": response_text, "error": f"JSON parsing error: {str(e)}"}
+        except Exception as e:
+            print(f"Error processing response: {str(e)}")
+            return {"error": f"Failed to process response: {str(e)}"}
+
+    except Exception as e:
+        print(f"Error in question generation: {str(e)}")
+        return {"error": str(e)}
+
+
 # def generate_quiz(client, file_name, prompt, system_prompt):
 #     try:
 #         file_path = pathlib.Path(f'temp/{file_name}')

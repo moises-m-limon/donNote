@@ -6,9 +6,10 @@ from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
 from dotenv import load_dotenv
-from utils import get_favorite_courses, get_course_files, summerize_file, summerize_text
+from utils import get_favorite_courses, get_course_files, summerize_file, summerize_text, generate_questions_from_file, generate_questions_from_text
 from google import genai
-from configs import SUMMARIZE_FILE_SYSTEM_PROMPT, SUMMARIZE_FILE_USER_PROMPT, SUPABASE_URL, SUPABASE_API_KEY, GEMINI_API_KEY, CANVAS_BASE_URL, CANVAS_TOKEN, SUMMARIZE_NOTES_USER_PROMPT, SUMMARIZE_NOTES_SYSTEM_PROMPT
+from configs import SUMMARIZE_FILE_SYSTEM_PROMPT, SUMMARIZE_FILE_USER_PROMPT, SUPABASE_URL, SUPABASE_API_KEY, GEMINI_API_KEY, CANVAS_BASE_URL, CANVAS_TOKEN, SUMMARIZE_NOTES_USER_PROMPT, SUMMARIZE_NOTES_SYSTEM_PROMPT, GENERATE_QUESTIONS_FILE_SYSTEM_PROMPT, GENERATE_QUESTIONS_FILE_USER_PROMPT, GENERATE_QUESTIONS_TEXT_SYSTEM_PROMPT, GENERATE_QUESTIONS_TEXT_USER_PROMPT
+import json
 
 # Load environment variables
 load_dotenv()
@@ -247,6 +248,98 @@ def summarize_file():
         except Exception as e:
             return jsonify({
                 "message": "Failed to download or save file",
+                "error": str(e)
+            }), 500
+
+
+@app.route('/api/generate-questions-file', methods=['POST'])
+def generate_questions_file():
+    if request.method == 'POST':
+        data = request.get_json()
+        file_name = data.get("file_name")
+        id = data.get("id")
+        num_questions = data.get("num_questions", 5)  # Default to 5 questions if not specified
+
+        # Create temp directory if it doesn't exist
+        if not os.path.exists('temp'):
+            os.makedirs('temp')
+
+        try:
+            # Download the file from Supabase
+            response = supabase.storage.from_("donshack2025").download(
+                "users/" + id + "/" + file_name)
+
+            # Write the response to a file in the temp directory
+            with open(os.path.join('temp', file_name), "wb") as file:
+                file.write(response)
+
+            # Generate questions from the file
+            questions_data = generate_questions_from_file(client, os.path.join(file_name),
+                                     GENERATE_QUESTIONS_FILE_USER_PROMPT, GENERATE_QUESTIONS_FILE_SYSTEM_PROMPT,
+                                     num_questions)
+
+            # Check if we have valid questions data
+            if "questions" in questions_data:
+                # Save the questions to a file for reference
+                with open("questions.txt", "w") as file:
+                    file.write(json.dumps(questions_data, indent=2))
+
+                return jsonify({
+                    "message": "Questions generated successfully",
+                    "questions": questions_data["questions"],
+                    "total_questions": len(questions_data["questions"])
+                }), 200
+            else:
+                # If there was an error or no questions found
+                return jsonify({
+                    "message": "Failed to generate valid questions",
+                    "error": questions_data.get("error", "Unknown error"),
+                    "raw_response": questions_data.get("raw_text", "")
+                }), 500
+
+        except Exception as e:
+            return jsonify({
+                "message": "Failed to generate questions",
+                "error": str(e)
+            }), 500
+
+
+@app.route('/api/generate-questions-text', methods=['POST'])
+def generate_questions_text():
+    if request.method == 'POST':
+        data = request.get_json()
+        text = data.get("text")
+        id = data.get("id")
+        num_questions = data.get("num_questions", 5)  # Default to 5 questions if not specified
+
+        try:
+            # Generate questions from the text
+            questions_data = generate_questions_from_text(client, text,
+                                     GENERATE_QUESTIONS_TEXT_USER_PROMPT, GENERATE_QUESTIONS_TEXT_SYSTEM_PROMPT,
+                                     num_questions)
+
+            # Check if we have valid questions data
+            if "questions" in questions_data:
+                # Save the questions to a file for reference
+                with open("questions.txt", "w") as file:
+                    file.write(json.dumps(questions_data, indent=2))
+
+                return jsonify({
+                    "message": "Questions generated successfully",
+                    "questions": questions_data["questions"],
+                    "total_questions": len(questions_data["questions"])
+                }), 200
+            else:
+                # If there was an error or no questions found
+                return jsonify({
+                    "message": "Failed to generate valid questions",
+                    "error": questions_data.get("error", "Unknown error"),
+                    "raw_response": questions_data.get("raw_text", "")
+                }), 500
+
+        except Exception as e:
+            return jsonify({
+                "message": "Failed to generate questions",
                 "error": str(e)
             }), 500
 
