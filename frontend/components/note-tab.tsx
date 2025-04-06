@@ -25,6 +25,12 @@ import KnowledgeGraph from "@/components/knowledge-graph";
 import QuizGenerator from "@/components/quiz-generator";
 import Summarizer from "@/components/summarizer";
 import { toast } from "@/hooks/use-toast";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabaseUrl = "https://your-supabase-url.supabase.co";
+const supabaseKey = "your-supabase-key";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Declare SpeechRecognition interface
 declare global {
@@ -288,10 +294,32 @@ export default function EnhancedNoteTab() {
   const loadNote = (id: string) => {
     const note = savedNotes.find((note) => note.id === id);
     if (note) {
+      console.log("Selected note:", note.title);
       setNoteContent(note.content);
       setNoteTitle(note.title);
       setNoteMode(note.mode);
       setSelectedNoteId(id);
+
+      // Get the public URL for the file
+      try {
+        // Get userId from localStorage
+        const userId = JSON.parse(
+          localStorage.getItem("googleUser") || "{}"
+        ).sub;
+        if (!userId) {
+          console.log("No user ID found");
+          return;
+        }
+
+        const filePath = `users/${userId}/${note.title}.txt`;
+        const { data } = supabase.storage
+          .from("donshack2025")
+          .getPublicUrl(filePath);
+
+        console.log("File public URL:", data.publicUrl);
+      } catch (error) {
+        console.error("Error getting file URL:", error);
+      }
     }
   };
 
@@ -409,7 +437,10 @@ export default function EnhancedNoteTab() {
                             ? "bg-[#f9e94e] text-[#1e2761]"
                             : "hover:bg-[#3a4180]"
                         }`}
-                        onClick={() => loadNote(note.id)}
+                        onClick={() => {
+                          console.log("Note clicked:", note.title);
+                          loadNote(note.id);
+                        }}
                       >
                         <div className="truncate flex-1">
                           <span className="font-medium">{note.title}</span>

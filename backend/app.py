@@ -131,6 +131,7 @@ def get_file():
         data = request.json
         user_id = data.get('userId')
         files = supabase.storage.from_('donshack2025').list('users/'+user_id)
+
         print(files)
         if len(files) == 0:
             return jsonify({"message": "No files found"}), 404
