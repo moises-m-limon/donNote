@@ -142,8 +142,6 @@ ${summary.key_points.map((point, index) => `${index + 1}. ${point}`).join("\n")}
 
   return (
     <>
-    
-     <div style={{"color": "white"}}>{JSON.stringify(mydata)}</div>
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Summarizer</CardTitle>
