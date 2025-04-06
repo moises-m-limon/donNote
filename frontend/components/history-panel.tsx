@@ -56,25 +56,23 @@ export default function HistoryPanel() {
   return (
     <div className={`flex flex-col h-full bg-[#1e2761] text-white transition-all duration-300 ${isCollapsed ? 'w-[50px]' : 'w-80'}`}>
       <div className="p-4 border-b border-[#7de2d1]/20 flex justify-between items-center">
-        <div className="text-[#7de2d1] font-semibold flex items-center gap-2">
-          {!isCollapsed && <>
-            <div onClick={() => setIsCollapsed(!isCollapsed)}>
-            <Clock className="h-5 w-5" />
-            <span>History</span></div>
-          </>}
-          {isCollapsed && <Clock className="h-5 w-5" onClick={() => setIsCollapsed(!isCollapsed)}/>}
-        </div>
-        <Button 
+        <div className="text-[#7de2d1]">
+          <Button 
           variant="ghost" 
-          size="sm" 
-          className="text-[#7de2d1] hover:bg-[#2a3270] p-1 h-6 w-6"
+          size="lg" 
+          className="text-[#7de2d1] font-semibold flex items-center gap-2 p-1 hover:bg-[#2a3270] h-16 w-"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? 
-            <ChevronLeft className="h-4 w-4" /> : 
-            <ChevronRight className="h-4 w-4" />
+            <div className="flex items-center justify-center"><ChevronLeft className="h-16 w-16" /><Clock className="h-5 w-5"/></div> : 
+            <ChevronRight className="h-8 w-8" />
           }
-        </Button>
+        {!isCollapsed && <>
+            <div onClick={() => setIsCollapsed(!isCollapsed)}>
+            <div className="flex items-center justify-center"><Clock className="h-5 w-5" /><div className="p-1">History</div></div>
+            </div>
+          </>}</Button>
+        </div>
       </div>
 
       {!isCollapsed && (

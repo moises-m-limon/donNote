@@ -50,10 +50,10 @@ export default function ClassTab() {
   return (
     <div className="flex flex-col h-full p-4 overflow-auto">
       {!hasToken ? (
-        <Card>
-          <CardHeader>
+        <Card className="bg-[#2a3270] border-[#7de2d1]">
+          <CardHeader className="pb-2">
             <CardTitle className="text-secondary">Canvas LMS Integration</CardTitle>
-            <CardDescription>Enter your Canvas LMS access token to connect to your classes.</CardDescription>
+            <CardDescription className="text-secondary">Enter your Canvas LMS access token to connect to your classes.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex space-x-2">
@@ -64,7 +64,7 @@ export default function ClassTab() {
                 onChange={(e) => setAccessToken(e.target.value)}
                 className="flex-1"
               />
-              <Button onClick={saveToken} className="bg-primary text-secondary hover:bg-primary/90">
+              <Button onClick={saveToken} className="bg-secondary text-[#2a3270] hover:bg-primary/90">
                 <Key className="mr-2 h-4 w-4" />
                 Connect
               </Button>
