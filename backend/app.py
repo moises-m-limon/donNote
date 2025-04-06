@@ -72,8 +72,15 @@ class File:
         }
 
 
-@app.route('/users/files', methods=['POST'])
+@app.route('/api/users/files', methods=['POST', 'OPTIONS'])
 def create_file():
+    print(f"Received {request.method} request to /api/users/files")
+
+    if request.method == 'OPTIONS':
+        response = jsonify({})
+        return response
+
+    print("Processing POST request with data")
     try:
         data = request.json
         user_id = data.get('userId')

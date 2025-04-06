@@ -6,12 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Mic, 
-  MicOff, 
-  Upload, 
-  BrainCircuit, 
-  FileQuestion, 
-  BookmarkPlus, 
+  Mic,
+  MicOff,
+  Upload,
+  BrainCircuit,
+  FileQuestion,
+  BookmarkPlus,
   PauseCircle,
   Save,
   FileText,
@@ -113,7 +113,7 @@ export default function EnhancedNoteTab() {
     if (!file) return;
 
     // Get userId from localStorage
-    const userId = JSON.parse(localStorage.getItem('googleUser') || '{}').sub;
+    const userId = JSON.parse(localStorage.getItem("googleUser") || "{}").sub;
     console.log(userId);
     if (!userId) {
       toast({
@@ -129,36 +129,39 @@ export default function EnhancedNoteTab() {
       if (event.target?.result) {
         // First set the content in the UI
         setNoteContent(event.target.result as string);
-        
+
         try {
           // Prepare the data for the API call
           const fileData = {
             userId: userId, // Now using the userId from localStorage
             file_content: event.target.result as string,
-            file_name: file.name
+            file_name: file.name,
           };
           console.log(fileData);
           // Make the API call
-          const response = await fetch('http://localhost:5000/api/users/files', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(fileData)
-          });
+          const response = await fetch(
+            "http://127.0.0.1:5000/api/users/files",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(fileData),
+            }
+          );
 
           if (!response.ok) {
-            throw new Error('Failed to upload file');
+            throw new Error("Failed to upload file");
           }
 
           const result = await response.json();
-          
+
           toast({
             title: "File uploaded successfully",
             description: `${file.name} has been uploaded and processed.`,
           });
         } catch (error) {
-          console.error('Error uploading file:', error);
+          console.error("Error uploading file:", error);
           toast({
             title: "Upload failed",
             description: "There was an error uploading your file.",
@@ -182,7 +185,7 @@ export default function EnhancedNoteTab() {
     setSavedNotes((prev) => [...prev, newNote]);
     setNoteContent("");
     setNoteTitle("Untitled Note");
-    
+
     toast({
       title: "Note saved",
       description: `${newNote.title} has been saved.`,
@@ -206,7 +209,7 @@ export default function EnhancedNoteTab() {
       setNoteContent("");
       setNoteTitle("Untitled Note");
     }
-    
+
     toast({
       title: "Note deleted",
       description: "The note has been removed.",
@@ -228,7 +231,7 @@ export default function EnhancedNoteTab() {
 
   const submitNote = async () => {
     if (!noteContent.trim()) return;
-    
+
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
@@ -366,7 +369,6 @@ export default function EnhancedNoteTab() {
                     className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
                     onClick={() =>
                       document.getElementById("file-upload")?.click()
-                      
                     }
                   >
                     <Upload className="mr-2 h-4 w-4" />
@@ -459,12 +461,14 @@ export default function EnhancedNoteTab() {
                 </Tabs>
               </CardContent>
             </Card>
-            
+
             {/* AI tools section */}
             <div className="mt-6">
               <Tabs
                 value={activeWidget || "none"}
-                onValueChange={(value) => setActiveWidget(value === "none" ? null : value)}
+                onValueChange={(value) =>
+                  setActiveWidget(value === "none" ? null : value)
+                }
               >
                 <TabsList className="grid grid-cols-3 bg-[#2a3270]">
                   <TabsTrigger
@@ -481,8 +485,8 @@ export default function EnhancedNoteTab() {
                     <BrainCircuit className="mr-2 h-4 w-4" />
                     Knowledge Graph
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="quiz" 
+                  <TabsTrigger
+                    value="quiz"
                     className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
                   >
                     <FileQuestion className="mr-2 h-4 w-4" />
