@@ -141,12 +141,22 @@ def get_file():
         return jsonify({"message": "No files found"}), 500
 
 
-@app.route('/api/courses', methods=['GET'])
+@app.route('/api/courses', methods=['POST'])
 def get_courses():
-    if request.method == 'GET':
+    if request.method == 'POST':
         try:
+            # Get the token from the request body
+            data = request.get_json()
+            token = data.get('token')
+            
+            if not token:
+                return jsonify({
+                    "message": "Missing token in request body",
+                    "error": "Unauthorized"
+                }), 401
+            
             # Get the courses data
-            courses = get_favorite_courses(CANVAS_BASE_URL, CANVAS_TOKEN)
+            courses = get_favorite_courses(CANVAS_BASE_URL, token)
             # Extract course names and IDs
             course_list = []
             for course in courses:
@@ -168,11 +178,21 @@ def get_courses():
             }), 500
 
 
-@app.route('/api/courses/<course_id>/files', methods=['GET'])
+@app.route('/api/courses/<course_id>/files', methods=['POST'])
 def get_course_files_endpoint(course_id):
     try:
+        # Get the token from the request body
+        data = request.get_json()
+        token = data.get('token')
+        
+        if not token:
+            return jsonify({
+                "message": "Missing token in request body",
+                "error": "Unauthorized"
+            }), 401
+        
         # Get files for the course using the utility function
-        file_list = get_course_files(course_id, CANVAS_BASE_URL, CANVAS_TOKEN)
+        file_list = get_course_files(course_id, CANVAS_BASE_URL, token)
 
         if file_list is None:
             return jsonify({

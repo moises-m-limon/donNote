@@ -127,11 +127,17 @@ export default function ClassTab() {
   const fetchCourses = async () => {
     setIsLoading(true)
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://127.0.0.1:5000' 
-        : 'https://donnote-427348651859.us-west1.run.app'
+      const baseUrl = 'https://donnote-427348651859.us-west1.run.app'
       
-      const response = await fetch(`${baseUrl}/api/courses`)
+      const response = await fetch(`${baseUrl}/api/courses`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: accessToken
+        })
+      })
       const data = await response.json()
       if (data.courses) {
         setCourses(data.courses)
@@ -150,11 +156,17 @@ export default function ClassTab() {
   const fetchCourseFiles = async (courseId: string) => {
     setIsLoadingFiles(true)
     try {
-      const baseUrl = process.env.NODE_ENV === 'development' 
-        ? 'http://127.0.0.1:5000' 
-        : 'https://donnote-427348651859.us-west1.run.app'
+      const baseUrl = 'https://donnote-427348651859.us-west1.run.app'
       
-      const response = await fetch(`${baseUrl}/api/courses/${courseId}/files`)
+      const response = await fetch(`${baseUrl}/api/courses/${courseId}/files`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: accessToken
+        })
+      })
       const data = await response.json()
       if (data.files) {
         setCourseFiles(data.files)
