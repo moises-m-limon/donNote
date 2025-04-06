@@ -406,7 +406,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
+              className="w-full border-[#7de2d1] bg-[#7de2d1] text-[#1e2761] hover:bg-[#f9e94e] hover:text-[#1e2761]"
               onClick={createNewNote}
             >
               <FileText className="mr-2 h-4 w-4" />
@@ -428,7 +428,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
                   className={`w-full ${
                     isRecording
                       ? "bg-red-500 hover:bg-red-600"
-                      : "bg-[#f9e94e] text-[#1e2761] hover:bg-[#e9d93e]"
+                      : "w-full border-[#7de2d1] bg-[#7de2d1] text-[#1e2761] hover:bg-[#f9e94e] hover:text-[#1e2761]"
                   }`}
                   onClick={toggleRecording}
                 >
@@ -446,7 +446,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
                 <div className="relative">
                   <Button
                     variant="outline"
-                    className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
+                    className="w-full border-[#7de2d1] bg-[#7de2d1] text-[#1e2761] hover:bg-[#f9e94e] hover:text-[#1e2761]"
                     onClick={() => {
                       document.getElementById("file-upload")?.click();
                       console.log("File upload clicked");
@@ -476,7 +476,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
                 </Button> */}
 
                 <Button
-                  className="w-full bg-[#7de2d1] text-[#1e2761] hover:bg-[#6dd2c1]"
+                  className="w-full border-[#7de2d1] bg-[#7de2d1] text-[#1e2761] hover:bg-[#f9e94e] hover:text-[#1e2761]"
                   onClick={saveNote}
                 >
                   <Save className="mr-2 h-4 w-4" />

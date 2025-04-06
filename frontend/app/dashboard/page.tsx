@@ -81,7 +81,7 @@ export default function Home() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-indigo-950 transition-all"
+                className="border-[#7de2d1] bg-[#7de2d1] text-[#1e2761] hover:bg-[#f9e94e] hover:text-[#1e2761]"
                 onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4 mr-2" />
