@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@supabase/supabase-js": "^2.49.4",
-    "react-latex-next": "^3.0.0"
-  }
-}
