@@ -98,12 +98,13 @@ export default function HistoryPanel({ setNoteContent, setNoteTitle }: HistoryPa
           className="text-[#7de2d1] hover:bg-[#3a4180] w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
+          {isCollapsed ? 
+            <ChevronLeft className="h-4 w-4" /> : 
+            <ChevronRight className="h-4 w-4" />
+          }
           <Clock className="h-8 w-8 flex-shrink-0" />
           {!isCollapsed && <span className="font-medium flex-1 text-left">History</span>}
-          {isCollapsed ? 
-            <ChevronRight className="h-4 w-4" /> : 
-            <ChevronLeft className="h-4 w-4" />
-          }
+          
         </Button>
       </div>
 
