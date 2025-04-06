@@ -22,6 +22,7 @@ def get_favorite_courses(base_url, token):
     response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()
 
+
 def get_root_folder_for_course(session, course_id, base_url):
     """
     Returns the root folder object for the specified course.
@@ -104,16 +105,17 @@ def get_course_files(course_id, base_url, token):
     # Create a session with the appropriate Authorization header
     session = requests.Session()
     session.headers.update({"Authorization": f"Bearer {token}"})
-    
+
     # Get the root folder for this course
-    root_folder = get_root_folder_for_course(session, course_id=course_id, base_url=base_url)
+    root_folder = get_root_folder_for_course(
+        session, course_id=course_id, base_url=base_url)
     if not root_folder:
         return None
-    
+
     # Get all files recursively
     all_files = []
     process_folder(session, root_folder, base_url, all_files)
-    
+
     # Format the response
     file_list = []
     for file in all_files:
@@ -127,7 +129,7 @@ def get_course_files(course_id, base_url, token):
             "updated_at": file.get("updated_at"),
             "folder_path": file.get("folder_path", "")
         })
-    
+
     return file_list
 
 
@@ -137,22 +139,22 @@ def process_folder(session, folder, base_url, all_files, folder_path=""):
     """
     folder_id = folder.get("id")
     folder_name = folder.get("name")
-    
+
     # Update the folder path
     current_folder_path = f"{folder_path}/{folder_name}" if folder_path else folder_name
-    
+
     # Get files in the current folder
     files = list_files_in_folder(session, folder_id, base_url)
     for file in files:
         # Add folder path to each file
         file["folder_path"] = current_folder_path
         all_files.append(file)
-    
+
     # Get subfolders and process them recursively
     subfolders = list_subfolders(session, folder_id, base_url)
     for subfolder in subfolders:
-        process_folder(session, subfolder, base_url, all_files, current_folder_path)
-=======
+        process_folder(session, subfolder, base_url,
+                       all_files, current_folder_path)
 # class BaseClass(typing.TypedDict, total=False):
 #     response: str
 
