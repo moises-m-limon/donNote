@@ -35,7 +35,7 @@ if prod == 'development':
 else:
     CORS(app, resources={
         r"/api/*": {
-            "origins": "https://cognition-simulation-e9on.vercel.app",
+            "origins": "https://don-note.vercel.app/",
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
