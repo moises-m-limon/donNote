@@ -36,7 +36,7 @@ if prod == 'development':
 else:
     CORS(app, resources={
         r"/api/*": {
-            "origins": "https://don-note.vercel.app/",
+            "origins": "https://don-note.vercel.app",
             "methods": ["GET", "POST", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
@@ -266,7 +266,8 @@ def generate_questions_file():
         data = request.get_json()
         file_name = data.get("file_name")
         id = data.get("id")
-        num_questions = data.get("num_questions", 5)  # Default to 5 questions if not specified
+        # Default to 5 questions if not specified
+        num_questions = data.get("num_questions", 5)
 
         # Create temp directory if it doesn't exist
         if not os.path.exists('temp'):
@@ -283,8 +284,8 @@ def generate_questions_file():
 
             # Generate questions from the file
             questions_data = generate_questions_from_file(client, os.path.join(file_name),
-                                     GENERATE_QUESTIONS_FILE_USER_PROMPT, GENERATE_QUESTIONS_FILE_SYSTEM_PROMPT,
-                                     num_questions)
+                                                          GENERATE_QUESTIONS_FILE_USER_PROMPT, GENERATE_QUESTIONS_FILE_SYSTEM_PROMPT,
+                                                          num_questions)
 
             # Check if we have valid questions data
             if "questions" in questions_data:
@@ -318,13 +319,14 @@ def generate_questions_text():
         data = request.get_json()
         text = data.get("text")
         id = data.get("id")
-        num_questions = data.get("num_questions", 5)  # Default to 5 questions if not specified
+        # Default to 5 questions if not specified
+        num_questions = data.get("num_questions", 5)
 
         try:
             # Generate questions from the text
             questions_data = generate_questions_from_text(client, text,
-                                     GENERATE_QUESTIONS_TEXT_USER_PROMPT, GENERATE_QUESTIONS_TEXT_SYSTEM_PROMPT,
-                                     num_questions)
+                                                          GENERATE_QUESTIONS_TEXT_USER_PROMPT, GENERATE_QUESTIONS_TEXT_SYSTEM_PROMPT,
+                                                          num_questions)
 
             # Check if we have valid questions data
             if "questions" in questions_data:
