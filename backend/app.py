@@ -122,8 +122,11 @@ def create_file():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/users', methods=['POST'])
+@app.route('/api/users', methods=['POST', 'OPTIONS'])
 def get_file():
+    if request.method == 'OPTIONS':
+        response = jsonify({})
+        return response
     try:
         data = request.json
         user_id = data.get('userId')
