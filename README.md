@@ -13,5 +13,6 @@ You need .env in frontend
 `GEMINI_API_KEY`
 `SUPABASE_URL`
 `SUPABASE_API_KEY`
+`DEV`
 
 # donNote
