@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
-from utils import get_favorite_courses
+from utils import get_favorite_courses, get_course_files
 
 # Load environment variables
 load_dotenv()
@@ -14,10 +14,9 @@ load_dotenv()
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
+CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
+CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
-
-token = os.getenv("CAVNAS_API_KEY")
-CANVAS_BASE_URL = "https://usfca.instructure.com/"
 
 app = Flask(__name__)
 
@@ -116,7 +115,7 @@ def get_courses():
     if request.method == 'GET':
         try:
             # Get the courses data
-            courses = get_favorite_courses(CANVAS_BASE_URL, token)
+            courses = get_favorite_courses(CANVAS_BASE_URL, CANVAS_TOKEN)
             # Extract course names and IDs
             course_list = []
             for course in courses:
@@ -137,6 +136,29 @@ def get_courses():
                 "error": str(e)
             }), 500
 
+@app.route('/api/courses/<course_id>/files', methods=['GET'])
+def get_course_files_endpoint(course_id):
+    try:
+        # Get files for the course using the utility function
+        file_list = get_course_files(course_id, CANVAS_BASE_URL, CANVAS_TOKEN)
+        
+        if file_list is None:
+            return jsonify({
+                "message": "Could not fetch files for the course",
+                "error": "Files not found"
+            }), 404
+        
+        return jsonify({
+            "message": "Files fetched successfully",
+            "course_id": course_id,
+            "files": file_list
+        }), 200
+    except Exception as e:
+        print(f"Error fetching files for course {course_id}: {str(e)}")
+        return jsonify({
+            "message": "Failed to fetch files",
+            "error": str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
