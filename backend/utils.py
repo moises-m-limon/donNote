@@ -4,6 +4,12 @@ from google.genai import types
 import httpx
 import requests
 import pathlib
+import typing_extensions as typing
+
+
+class BaseClass(typing.TypedDict, total=False):
+    summary: str
+    bullet_points: list[str]
 
 
 def get_favorite_courses(base_url, token):
@@ -196,7 +202,9 @@ def summerize_text(client, text, prompt, system_prompt):
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             config=types.GenerateContentConfig(
-                system_instruction=system_prompt
+                system_instruction=system_prompt,
+                response_mime_type="application/json",
+                response_schema=BaseClass
             ),
             contents=[
                 text,
@@ -206,8 +214,9 @@ def summerize_text(client, text, prompt, system_prompt):
 
         # Parse the JSON response
         try:
-            print(response.text)
-            return response.text
+            json_response = json.loads(
+                response.text)
+            return json_response
         except Exception as e:
             print(f"Error parsing JSON response: {str(e)}")
             return {"error": "Failed to parse response"}

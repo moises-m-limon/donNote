@@ -6,12 +6,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Mic, 
-  MicOff, 
-  Upload, 
-  BrainCircuit, 
-  FileQuestion, 
-  BookmarkPlus, 
+  Mic,
+  MicOff,
+  Upload,
+  BrainCircuit,
+  FileQuestion,
+  BookmarkPlus,
   PauseCircle,
   Save,
   FileText,
@@ -25,6 +25,12 @@ import KnowledgeGraph from "@/components/knowledge-graph";
 import QuizGenerator from "@/components/quiz-generator";
 import Summarizer from "@/components/summarizer";
 import { toast } from "@/hooks/use-toast";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Declare SpeechRecognition interface
 declare global {
@@ -34,10 +40,15 @@ declare global {
   }
 }
 
-export default function EnhancedNoteTab() {
+interface NoteTabProps {
+  noteContent: string;
+  setNoteContent: (content: string) => void;
+  noteTitle: string;
+  setNoteTitle: (title: string) => void;
+}
+
+export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNoteTitle }: NoteTabProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [noteContent, setNoteContent] = useState("");
-  const [noteTitle, setNoteTitle] = useState("Untitled Note");
   const [noteMode, setNoteMode] = useState("detailed");
   const [activeWidget, setActiveWidget] = useState<string | null>(null);
   const [savedNotes, setSavedNotes] = useState<
@@ -48,9 +59,58 @@ export default function EnhancedNoteTab() {
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
+  const [userFiles, setUserFiles] = useState<
+    Array<{
+      id: string;
+      name: string;
+      created_at: string;
+      updated_at: string;
+    }>
+  >([]);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<typeof SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Add useEffect to fetch files on component mount
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        // Get userId from localStorage
+        const userId = JSON.parse(
+          localStorage.getItem("googleUser") || "{}"
+        ).sub;
+        if (!userId) {
+          console.log("No user ID found");
+          return;
+        }
+
+        const response = await fetch("http://127.0.0.1:5000/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch files");
+        }
+
+        const files = await response.json();
+        console.log("Files from backend:", files);
+
+        // Filter out the placeholder file and set the state
+        const filteredFiles = files.filter(
+          (file: any) => file.name !== ".emptyFolderPlaceholder"
+        );
+        setUserFiles(filteredFiles);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+      }
+    };
+
+    fetchFiles();
+  }, []); // Empty dependency array means this runs once on mount
 
   useEffect(() => {
     if (
@@ -113,7 +173,7 @@ export default function EnhancedNoteTab() {
     if (!file) return;
 
     // Get userId from localStorage
-    const userId = JSON.parse(localStorage.getItem('googleUser') || '{}').sub;
+    const userId = JSON.parse(localStorage.getItem("googleUser") || "{}").sub;
     console.log(userId);
     if (!userId) {
       toast({
@@ -129,36 +189,40 @@ export default function EnhancedNoteTab() {
       if (event.target?.result) {
         // First set the content in the UI
         setNoteContent(event.target.result as string);
-        
+
         try {
           // Prepare the data for the API call
           const fileData = {
             userId: userId, // Now using the userId from localStorage
             file_content: event.target.result as string,
-            file_name: file.name
+            file_name: file.name,
           };
           console.log(fileData);
+          setNoteTitle(file.name);
           // Make the API call
-          const response = await fetch('http://localhost:5000/api/users/files', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(fileData)
-          });
+          const response = await fetch(
+            "http://127.0.0.1:5000/api/users/files",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(fileData),
+            }
+          );
 
           if (!response.ok) {
-            throw new Error('Failed to upload file');
+            throw new Error("Failed to upload file");
           }
 
           const result = await response.json();
-          
+
           toast({
             title: "File uploaded successfully",
             description: `${file.name} has been uploaded and processed.`,
           });
         } catch (error) {
-          console.error('Error uploading file:', error);
+          console.error("Error uploading file:", error);
           toast({
             title: "Upload failed",
             description: "There was an error uploading your file.",
@@ -171,31 +235,96 @@ export default function EnhancedNoteTab() {
     reader.readAsText(file);
   };
 
-  const saveNote = () => {
-    const newNote = {
-      id: Date.now().toString(),
-      title: noteTitle || "Untitled Note",
-      content: noteContent,
-      mode: noteMode,
-    };
+  const saveNote = async () => {
+    try {
+      // Get userId from localStorage
+      const userId = JSON.parse(localStorage.getItem("googleUser") || "{}").sub;
+      if (!userId) {
+        toast({
+          title: "Authentication Error",
+          description: "User ID not found. Please log in again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    setSavedNotes((prev) => [...prev, newNote]);
-    setNoteContent("");
-    setNoteTitle("Untitled Note");
-    
-    toast({
-      title: "Note saved",
-      description: `${newNote.title} has been saved.`,
-    });
+      const newNote = {
+        id: Date.now().toString(),
+        title: noteTitle || "Untitled Note",
+        content: noteContent,
+        mode: noteMode,
+      };
+
+      // Save to local state
+      setSavedNotes((prev) => [...prev, newNote]);
+
+      // Save to backend
+      const response = await fetch("http://127.0.0.1:5000/api/users/files", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          file_content: noteContent,
+          file_name: `${noteTitle || "Untitled Note"}.txt`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save note to backend");
+      }
+
+      const result = await response.json();
+      console.log("Note saved to backend:", result);
+
+      // Clear the form
+      setNoteContent("");
+      setNoteTitle("Untitled Note");
+
+      toast({
+        title: "Note saved",
+        description: `${newNote.title} has been saved locally and to the cloud.`,
+      });
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your note to the cloud.",
+        variant: "destructive",
+      });
+    }
   };
 
   const loadNote = (id: string) => {
     const note = savedNotes.find((note) => note.id === id);
     if (note) {
+      console.log("Selected note:", note.title);
       setNoteContent(note.content);
       setNoteTitle(note.title);
       setNoteMode(note.mode);
       setSelectedNoteId(id);
+
+      // Get the public URL for the file
+      try {
+        // Get userId from localStorage
+        const userId = JSON.parse(
+          localStorage.getItem("googleUser") || "{}"
+        ).sub;
+        if (!userId) {
+          console.log("No user ID found");
+          return;
+        }
+
+        const filePath = `users/${userId}/${note.title}.txt`;
+        const { data } = supabase.storage
+          .from("donshack2025")
+          .getPublicUrl(filePath);
+
+        console.log("File public URL:", data.publicUrl);
+      } catch (error) {
+        console.error("Error getting file URL:", error);
+      }
     }
   };
 
@@ -206,7 +335,7 @@ export default function EnhancedNoteTab() {
       setNoteContent("");
       setNoteTitle("Untitled Note");
     }
-    
+
     toast({
       title: "Note deleted",
       description: "The note has been removed.",
@@ -228,7 +357,7 @@ export default function EnhancedNoteTab() {
 
   const submitNote = async () => {
     if (!noteContent.trim()) return;
-    
+
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
@@ -271,14 +400,8 @@ export default function EnhancedNoteTab() {
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <div className="bg-[#f9e94e] p-2 rounded-md">
-              <h1 className="text-[#1e2761] text-2xl md:text-3xl font-bold tracking-tight">
-                DONS HACK
-              </h1>
-            </div>
-            <div className="bg-[#7de2d1] px-2 py-1 rounded text-[#1e2761] text-xs font-bold">
-              NOTES
-            </div>
+           
+           
           </div>
           <div className="flex gap-2">
             <Button
@@ -294,47 +417,7 @@ export default function EnhancedNoteTab() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
-            <Card className="bg-[#2a3270] border-[#7de2d1]">
-              <CardHeader className="bg-[#7de2d1] text-[#1e2761]">
-                <CardTitle className="text-lg font-bold">Saved Notes</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {savedNotes.length === 0 ? (
-                  <p className="text-[#7de2d1] text-center py-4">
-                    No saved notes yet
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {savedNotes.map((note) => (
-                      <li
-                        key={note.id}
-                        className={`p-2 rounded cursor-pointer flex justify-between items-center ${
-                          selectedNoteId === note.id
-                            ? "bg-[#f9e94e] text-[#1e2761]"
-                            : "hover:bg-[#3a4180]"
-                        }`}
-                        onClick={() => loadNote(note.id)}
-                      >
-                        <div className="truncate flex-1">
-                          <span className="font-medium">{note.title}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-100/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNote(note.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+     
 
             <Card className="bg-[#2a3270] border-[#7de2d1]">
               <CardHeader className="bg-[#7de2d1] text-[#1e2761]">
@@ -364,10 +447,12 @@ export default function EnhancedNoteTab() {
                   <Button
                     variant="outline"
                     className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
-                    onClick={() =>
-                      document.getElementById("file-upload")?.click()
-                      
-                    }
+                    onClick={() => {
+                      document.getElementById("file-upload")?.click();
+                      console.log("File upload clicked");
+                      console.log(document.getElementById("file-upload"));
+                      // setNoteTitle(note.title);
+                    }}
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Document
@@ -459,12 +544,14 @@ export default function EnhancedNoteTab() {
                 </Tabs>
               </CardContent>
             </Card>
-            
+
             {/* AI tools section */}
             <div className="mt-6">
               <Tabs
                 value={activeWidget || "none"}
-                onValueChange={(value) => setActiveWidget(value === "none" ? null : value)}
+                onValueChange={(value) =>
+                  setActiveWidget(value === "none" ? null : value)
+                }
               >
                 <TabsList className="grid grid-cols-3 bg-[#2a3270]">
                   <TabsTrigger
@@ -481,8 +568,8 @@ export default function EnhancedNoteTab() {
                     <BrainCircuit className="mr-2 h-4 w-4" />
                     Knowledge Graph
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="quiz" 
+                  <TabsTrigger
+                    value="quiz"
                     className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
                   >
                     <FileQuestion className="mr-2 h-4 w-4" />
@@ -493,7 +580,7 @@ export default function EnhancedNoteTab() {
                 <TabsContent value="summarize">
                   <Card className="bg-[#2a3270] border-[#7de2d1]">
                     <CardContent className="pt-6">
-                      <Summarizer content={noteContent} />
+                      <Summarizer content={noteContent} setNoteContent={setNoteContent} />
                     </CardContent>
                   </Card>
                 </TabsContent>

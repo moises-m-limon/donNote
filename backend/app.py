@@ -73,8 +73,15 @@ class File:
         }
 
 
-@app.route('/users/files', methods=['POST'])
+@app.route('/api/users/files', methods=['POST', 'OPTIONS'])
 def create_file():
+    print(f"Received {request.method} request to /api/users/files")
+
+    if request.method == 'OPTIONS':
+        response = jsonify({})
+        return response
+
+    print("Processing POST request with data")
     try:
         data = request.json
         user_id = data.get('userId')
@@ -116,12 +123,16 @@ def create_file():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/users', methods=['POST'])
+@app.route('/api/users', methods=['POST', 'OPTIONS'])
 def get_file():
+    if request.method == 'OPTIONS':
+        response = jsonify({})
+        return response
     try:
         data = request.json
         user_id = data.get('userId')
         files = supabase.storage.from_('donshack2025').list('users/'+user_id)
+
         print(files)
         if len(files) == 0:
             return jsonify({"message": "No files found"}), 404
@@ -206,6 +217,9 @@ def summarize_file_1():
             summary = summerize_file(client, os.path.join(file_name),
                                      SUMMARIZE_FILE_USER_PROMPT, SUMMARIZE_FILE_SYSTEM_PROMPT)
 
+            print('here', SUMMARIZE_FILE_SYSTEM_PROMPT)
+            print('here', SUMMARIZE_FILE_USER_PROMPT)
+
             print(summary)
 
             with open("summary.txt", "w") as file:
@@ -237,13 +251,7 @@ def summarize_file():
 
             print(summary)
 
-            with open("summary.txt", "w") as file:
-                file.write(summary)
-
-            return jsonify({
-                "message": "File downloaded and saved successfully",
-                "summary": summary
-            }), 200
+            return summary, 200
 
         except Exception as e:
             return jsonify({
