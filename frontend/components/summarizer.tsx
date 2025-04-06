@@ -77,16 +77,6 @@ export default function Summarizer({ content }: SummarizerProps) {
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2 mb-4">
-          <Select value={summaryType} onValueChange={setSummaryType}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Summary type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="concise">Concise</SelectItem>
-              <SelectItem value="detailed">Detailed</SelectItem>
-              <SelectItem value="bullet">Bullet Points</SelectItem>
-            </SelectContent>
-          </Select>
           <Button
             onClick={handleGenerate}
             disabled={isGenerating}
