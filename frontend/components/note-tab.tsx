@@ -1,16 +1,153 @@
-"use client";
+// "use client"
 
-import type React from "react";
+// import { useState } from "react"
+// import { Button } from "@/components/ui/button"
+// import { Textarea } from "@/components/ui/textarea"
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+// import { Mic, Upload, BrainCircuit, FileQuestion, BookmarkPlus, PauseCircle } from "lucide-react"
+// import KnowledgeGraph from "@/components/knowledge-graph"
+// import QuizGenerator from "@/components/quiz-generator"
+// import Summarizer from "@/components/summarizer"
+// import { toast } from "@/hooks/use-toast"
+
+// export default function NoteTab() {
+//   const [isRecording, setIsRecording] = useState(false)
+//   const [noteContent, setNoteContent] = useState("")
+//   const [activeWidget, setActiveWidget] = useState<string | null>(null)
+
+//   const toggleRecording = () => {
+//     setIsRecording(!isRecording)
+//     if (!isRecording) {
+//       toast({
+//         title: "Recording started",
+//         description: "Speak clearly into your microphone.",
+//       })
+//     } else {
+//       toast({
+//         title: "Recording stopped",
+//         description: "Your speech has been transcribed.",
+//       })
+//       // Simulate adding transcribed text
+//       setNoteContent(
+//         noteContent +
+//           "\n\nThis is simulated transcribed text from your voice recording. The actual implementation would use the Web Speech API or a similar service to convert speech to text in real-time.",
+//       )
+//     }
+//   }
+
+//   const handleUpload = () => {
+//     // Simulate file upload
+//     toast({
+//       title: "File upload",
+//       description: "Select a file to upload and summarize.",
+//     })
+//   }
+
+//   const handleAssignToClass = () => {
+//     toast({
+//       title: "Assign to class",
+//       description: "Select a class to assign this note to.",
+//     })
+//   }
+
+//   return (
+//     <div className="flex flex-col h-full">
+//       <div className="p-4 flex-1 overflow-auto">
+//         <div className="mb-4">
+//           <Textarea
+//             placeholder="Start typing your notes here..."
+//             className="min-h-[200px] resize-none border-gray-300"
+//             value={noteContent}
+//             onChange={(e) => setNoteContent(e.target.value)}
+//           />
+//           <div className="flex mt-2 space-x-2">
+//             <Button
+//               variant={isRecording ? "destructive" : "outline"}
+//               size="sm"
+//               onClick={toggleRecording}
+//               className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
+//             >
+//               {isRecording ? (
+//                 <>
+//                   <PauseCircle className="mr-2 h-4 w-4" />
+//                   Stop Recording
+//                 </>
+//               ) : (
+//                 <>
+//                   <Mic className="mr-2 h-4 w-4" />
+//                   Voice to Text
+//                 </>
+//               )}
+//             </Button>
+//             <Button variant="outline" size="sm" onClick={handleUpload}>
+//               <Upload className="mr-2 h-4 w-4" />
+//               Upload Document
+//             </Button>
+//             <Button variant="outline" size="sm" onClick={handleAssignToClass}>
+//               <BookmarkPlus className="mr-2 h-4 w-4" />
+//               Assign to Class
+//             </Button>
+//           </div>
+//         </div>
+
+//         <div className="grid grid-cols-1 gap-4">
+//           <Tabs
+//             value={activeWidget || "none"}
+//             onValueChange={(value) => setActiveWidget(value === "none" ? null : value)}
+//           >
+//             <TabsList className="grid grid-cols-3 mb-4">
+//               <TabsTrigger
+//                 value="summarize"
+//                 className="data-[state=active]:bg-primary data-[state=active]:text-secondary"
+//               >
+//                 <Upload className="mr-2 h-4 w-4" />
+//                 Summarize
+//               </TabsTrigger>
+//               <TabsTrigger
+//                 value="knowledge-graph"
+//                 className="data-[state=active]:bg-primary data-[state=active]:text-secondary"
+//               >
+//                 <BrainCircuit className="mr-2 h-4 w-4" />
+//                 Knowledge Graph
+//               </TabsTrigger>
+//               <TabsTrigger value="quiz" className="data-[state=active]:bg-primary data-[state=active]:text-secondary">
+//                 <FileQuestion className="mr-2 h-4 w-4" />
+//                 Generate Quiz
+//               </TabsTrigger>
+//             </TabsList>
+
+//             <TabsContent value="summarize">
+//               <Summarizer content={noteContent} />
+//             </TabsContent>
+
+//             <TabsContent value="knowledge-graph">
+//               <KnowledgeGraph content={noteContent} />
+//             </TabsContent>
+
+//             <TabsContent value="quiz">
+//               <QuizGenerator content={noteContent} />
+//             </TabsContent>
+//           </Tabs>
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Mic,
-  MicOff,
-  FileUp,
+  Mic, 
+  MicOff, 
+  Upload, 
+  BrainCircuit, 
+  FileQuestion, 
+  BookmarkPlus, 
+  PauseCircle,
   Save,
   FileText,
   Layers,
@@ -19,37 +156,25 @@ import {
   Trash2,
   Send,
 } from "lucide-react";
+import KnowledgeGraph from "@/components/knowledge-graph";
+import QuizGenerator from "@/components/quiz-generator";
+import Summarizer from "@/components/summarizer";
+import { toast } from "@/hooks/use-toast";
 
 // Declare SpeechRecognition interface
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: SpeechRecognition;
+    webkitSpeechRecognition: SpeechRecognition;
   }
 }
 
-interface SpeechRecognitionResult {
-  isFinal: boolean;
-  [index: number]: {
-    transcript: string;
-  };
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-}
-
-export default function SpeechToTextInterface() {
+export default function EnhancedNoteTab() {
   const [isRecording, setIsRecording] = useState(false);
-  const [notes, setNotes] = useState("");
+  const [noteContent, setNoteContent] = useState("");
   const [noteTitle, setNoteTitle] = useState("Untitled Note");
   const [noteMode, setNoteMode] = useState("detailed");
+  const [activeWidget, setActiveWidget] = useState<string | null>(null);
   const [savedNotes, setSavedNotes] = useState<
     { id: string; title: string; content: string; mode: string }[]
   >([]);
@@ -59,7 +184,7 @@ export default function SpeechToTextInterface() {
     "idle" | "success" | "error"
   >("idle");
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -73,15 +198,14 @@ export default function SpeechToTextInterface() {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
-      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-        const results = event.results;
-        const transcript = Array.from({ length: results.length }, (_, i) => results.item(i))
-          .map(result => result[0])
-          .map(result => result.transcript)
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
           .join("");
 
         if (event.results[0].isFinal) {
-          setNotes((prev) => {
+          setNoteContent((prev) => {
             // For big picture mode, add bullet points and keep it concise
             if (noteMode === "bigpicture") {
               return prev + "• " + transcript + "\n";
@@ -105,8 +229,16 @@ export default function SpeechToTextInterface() {
 
     if (isRecording) {
       recognitionRef.current.stop();
+      toast({
+        title: "Recording stopped",
+        description: "Your speech has been transcribed.",
+      });
     } else {
       recognitionRef.current.start();
+      toast({
+        title: "Recording started",
+        description: "Speak clearly into your microphone.",
+      });
     }
     setIsRecording(!isRecording);
   };
@@ -118,29 +250,39 @@ export default function SpeechToTextInterface() {
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
-        setNotes(event.target.result as string);
+        setNoteContent(event.target.result as string);
       }
     };
     reader.readAsText(file);
+    
+    toast({
+      title: "File uploaded",
+      description: `${file.name} has been loaded.`,
+    });
   };
 
   const saveNote = () => {
     const newNote = {
       id: Date.now().toString(),
       title: noteTitle || "Untitled Note",
-      content: notes,
+      content: noteContent,
       mode: noteMode,
     };
 
     setSavedNotes((prev) => [...prev, newNote]);
-    setNotes("");
+    setNoteContent("");
     setNoteTitle("Untitled Note");
+    
+    toast({
+      title: "Note saved",
+      description: `${newNote.title} has been saved.`,
+    });
   };
 
   const loadNote = (id: string) => {
     const note = savedNotes.find((note) => note.id === id);
     if (note) {
-      setNotes(note.content);
+      setNoteContent(note.content);
       setNoteTitle(note.title);
       setNoteMode(note.mode);
       setSelectedNoteId(id);
@@ -151,33 +293,44 @@ export default function SpeechToTextInterface() {
     setSavedNotes((prev) => prev.filter((note) => note.id !== id));
     if (selectedNoteId === id) {
       setSelectedNoteId(null);
-      setNotes("");
+      setNoteContent("");
       setNoteTitle("Untitled Note");
     }
+    
+    toast({
+      title: "Note deleted",
+      description: "The note has been removed.",
+    });
   };
 
   const createNewNote = () => {
-    setNotes("");
+    setNoteContent("");
     setNoteTitle("Untitled Note");
     setSelectedNoteId(null);
   };
 
-  const submitNote = async () => {
-    if (!notes.trim()) return;
+  const handleAssignToClass = () => {
+    toast({
+      title: "Assign to class",
+      description: "Select a class to assign this note to.",
+    });
+  };
 
+  const submitNote = async () => {
+    if (!noteContent.trim()) return;
+    
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
     try {
-      const response = await fetch("/api/notes", {
+      // You would replace this with your actual API endpoint
+      const response = await fetch("http://127.0.0.1:5000/api/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: noteTitle,
-          content: notes,
-          mode: noteMode,
+          notes: noteContent,
         }),
       });
 
@@ -186,9 +339,18 @@ export default function SpeechToTextInterface() {
       }
 
       setSubmitStatus("success");
+      toast({
+        title: "Note submitted",
+        description: "Your note has been successfully processed.",
+      });
     } catch (error) {
       console.error("Error submitting note:", error);
       setSubmitStatus("error");
+      toast({
+        title: "Submission failed",
+        description: "There was an error submitting your note.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -245,12 +407,6 @@ export default function SpeechToTextInterface() {
                       >
                         <div className="truncate flex-1">
                           <span className="font-medium">{note.title}</span>
-                          <div className="text-xs opacity-70">
-                            {note.mode === "bigpicture"
-                              ? "Big Picture"
-                              : "Detailed"}{" "}
-                            • {new Date().toLocaleDateString()}
-                          </div>
                         </div>
                         <Button
                           variant="ghost"
@@ -302,8 +458,8 @@ export default function SpeechToTextInterface() {
                       document.getElementById("file-upload")?.click()
                     }
                   >
-                    <FileUp className="mr-2 h-4 w-4" />
-                    Upload File
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Document
                   </Button>
                   <input
                     type="file"
@@ -313,6 +469,15 @@ export default function SpeechToTextInterface() {
                     onChange={handleFileUpload}
                   />
                 </div>
+                
+                <Button
+                  variant="outline"
+                  className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
+                  onClick={handleAssignToClass}
+                >
+                  <BookmarkPlus className="mr-2 h-4 w-4" />
+                  Assign to Class
+                </Button>
 
                 <Button
                   className="w-full bg-[#7de2d1] text-[#1e2761] hover:bg-[#6dd2c1]"
@@ -325,10 +490,10 @@ export default function SpeechToTextInterface() {
                 <Button
                   className="w-full bg-[#f9e94e] text-[#1e2761] hover:bg-[#e9d93e]"
                   onClick={submitNote}
-                  disabled={isSubmitting || !notes.trim()}
+                  disabled={isSubmitting || !noteContent.trim()}
                 >
                   <Send className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Submitting..." : "Submit Note"}
+                  {isSubmitting ? "Submitting..." : "Submit to Backend"}
                 </Button>
 
                 {submitStatus === "success" && (
@@ -365,28 +530,12 @@ export default function SpeechToTextInterface() {
                   onValueChange={setNoteMode}
                   className="w-full"
                 >
-                  <TabsList className="bg-[#1e2761]/20 w-full justify-end rounded-none border-b border-[#7de2d1]/20">
-                    <TabsTrigger
-                      value="detailed"
-                      className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
-                    >
-                      <List className="h-4 w-4 mr-1" />
-                      Detailed
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="bigpicture"
-                      className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
-                    >
-                      <Layers className="h-4 w-4 mr-1" />
-                      Big Picture
-                    </TabsTrigger>
-                  </TabsList>
                   <TabsContent value="detailed" className="m-0">
                     <div className="p-4 bg-white/5 min-h-[500px]">
                       <Textarea
                         ref={textareaRef}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
                         placeholder="Start typing or recording your detailed notes here..."
                         className="min-h-[500px] bg-transparent border-none focus-visible:ring-0 resize-none text-white placeholder:text-white/40"
                       />
@@ -396,8 +545,8 @@ export default function SpeechToTextInterface() {
                     <div className="p-4 bg-white/5 min-h-[500px]">
                       <Textarea
                         ref={textareaRef}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
                         placeholder="• Record key points and main ideas here...
 • Perfect for summarizing concepts
 • Use bullet points for clarity"
@@ -408,11 +557,67 @@ export default function SpeechToTextInterface() {
                 </Tabs>
               </CardContent>
             </Card>
+            
+            {/* AI tools section */}
+            <div className="mt-6">
+              <Tabs
+                value={activeWidget || "none"}
+                onValueChange={(value) => setActiveWidget(value === "none" ? null : value)}
+              >
+                <TabsList className="grid grid-cols-3 bg-[#2a3270]">
+                  <TabsTrigger
+                    value="summarize"
+                    className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Summarize
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="knowledge-graph"
+                    className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
+                  >
+                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    Knowledge Graph
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="quiz" 
+                    className="data-[state=active]:bg-[#f9e94e] data-[state=active]:text-[#1e2761]"
+                  >
+                    <FileQuestion className="mr-2 h-4 w-4" />
+                    Generate Quiz
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="summarize">
+                  <Card className="bg-[#2a3270] border-[#7de2d1]">
+                    <CardContent className="pt-6">
+                      <Summarizer content={noteContent} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="knowledge-graph">
+                  <Card className="bg-[#2a3270] border-[#7de2d1]">
+                    <CardContent className="pt-6">
+                      <KnowledgeGraph content={noteContent} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="quiz">
+                  <Card className="bg-[#2a3270] border-[#7de2d1]">
+                    <CardContent className="pt-6">
+                      <QuizGenerator content={noteContent} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
 
             <div className="mt-4 text-center text-[#7de2d1] text-sm">
               <p>
                 <Sparkles className="inline h-4 w-4 mr-1" />
-                Speech-to-text powered by Web Speech API
+                Speech-to-text powered by #CampusTech *WIT* & *ACM*
               </p>
             </div>
           </div>
