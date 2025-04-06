@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
-from utils import get_favorite_courses, get_course_files, summerize
+from utils import get_favorite_courses, get_course_files, summerize_file, summerize_text
 from google import genai
 from prompts import SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT
 
@@ -173,8 +173,8 @@ def get_course_files_endpoint(course_id):
         }), 500
 
 
-@app.route('/api/summarize', methods=['POST'])
-def summarize():
+@app.route('/api/summarize-file', methods=['POST'])
+def summarize_file_1():
     if request.method == 'POST':
         data = request.get_json()
         file_name = data.get("file_name")
@@ -194,8 +194,38 @@ def summarize():
                 file.write(response)
 
             # Summarize the file
-            summary = summerize(client, os.path.join(file_name),
-                                SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT)
+            summary = summerize_file(client, os.path.join(file_name),
+                                     SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT)
+
+            print(summary)
+
+            with open("summary.txt", "w") as file:
+                file.write(summary)
+
+            return jsonify({
+                "message": "File downloaded and saved successfully",
+                "summary": summary
+            }), 200
+
+        except Exception as e:
+            return jsonify({
+                "message": "Failed to download or save file",
+                "error": str(e)
+            }), 500
+
+
+@app.route('/api/summarize-text', methods=['POST'])
+def summarize_file():
+    if request.method == 'POST':
+        data = request.get_json()
+        str = data.get("str")
+        id = data.get("id")
+
+        try:
+
+            # Summarize the file
+            summary = summerize_text(client, str,
+                                     SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT)
 
             print(summary)
 

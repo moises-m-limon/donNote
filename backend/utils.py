@@ -159,10 +159,8 @@ def process_folder(session, folder, base_url, all_files, folder_path=""):
 #     response: str
 
 
-def summerize(client, file_name, prompt, system_prompt):
+def summerize_file(client, file_name, prompt, system_prompt):
     try:
-
-        # Read the file from the temp directory
         file_path = pathlib.Path(f'temp/{file_name}')
 
         # Generate content using the file and prompt
@@ -190,3 +188,44 @@ def summerize(client, file_name, prompt, system_prompt):
     except Exception as e:
         print(f"Error in summarization: {str(e)}")
         return {"error": str(e)}
+
+
+def summerize_text(client, text, prompt, system_prompt):
+    try:
+        # Generate content using the text and prompt
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt
+            ),
+            contents=[
+                text,
+                prompt
+            ],
+        )
+
+        # Parse the JSON response
+        try:
+            print(response.text)
+            return response.text
+        except Exception as e:
+            print(f"Error parsing JSON response: {str(e)}")
+            return {"error": "Failed to parse response"}
+
+    except Exception as e:
+        print(f"Error in summarization: {str(e)}")
+        return {"error": str(e)}
+
+
+# def generate_quiz(client, file_name, prompt, system_prompt):
+#     try:
+#         file_path = pathlib.Path(f'temp/{file_name}')
+
+#         # Generate content using the file and prompt
+#         response = client.models.generate_content(
+#             model="gemini-2.0-flash",
+#             config=types.GenerateContentConfig(
+#                 system_instruction=system_prompt
+#             ),
+#             contents=[
+#                 types.Part.from_bytes(
