@@ -28,8 +28,8 @@ import { toast } from "@/hooks/use-toast";
 import { createClient } from "@supabase/supabase-js";
 
 // Initialize Supabase client
-const supabaseUrl = "https://your-supabase-url.supabase.co";
-const supabaseKey = "your-supabase-key";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Declare SpeechRecognition interface
@@ -476,6 +476,39 @@ export default function EnhancedNoteTab() {
                           className="h-8 w-8 text-[#7de2d1] hover:text-[#f9e94e] hover:bg-[#3a4180]"
                           onClick={() => {
                             // Handle file selection
+                            const userId = JSON.parse(
+                              localStorage.getItem("googleUser") || "{}"
+                            ).sub;
+                            const filePath = `users/${userId}/${file.name}`;
+                            const { data } = supabase.storage
+                              .from("donshack2025")
+                              .getPublicUrl(filePath);
+
+                            console.log("File public URL:", data.publicUrl);
+
+                            // Fetch the file contents
+                            fetch(data.publicUrl)
+                              .then((response) => {
+                                if (!response.ok) {
+                                  throw new Error(
+                                    `HTTP error! Status: ${response.status}`
+                                  );
+                                }
+                                return response.text();
+                              })
+                              .then((text) => {
+                                console.log("File contents:", text);
+                                // Set the text content and title
+                                setNoteContent(text);
+                                setNoteTitle(file.name.replace(".txt", ""));
+                              })
+                              .catch((error) => {
+                                console.error(
+                                  "Error fetching file contents:",
+                                  error
+                                );
+                              });
+
                             console.log("Selected file:", file);
                           }}
                         >
