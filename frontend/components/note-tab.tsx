@@ -48,9 +48,58 @@ export default function EnhancedNoteTab() {
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
+  const [userFiles, setUserFiles] = useState<
+    Array<{
+      id: string;
+      name: string;
+      created_at: string;
+      updated_at: string;
+    }>
+  >([]);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Add useEffect to fetch files on component mount
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        // Get userId from localStorage
+        const userId = JSON.parse(
+          localStorage.getItem("googleUser") || "{}"
+        ).sub;
+        if (!userId) {
+          console.log("No user ID found");
+          return;
+        }
+
+        const response = await fetch("http://127.0.0.1:5000/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch files");
+        }
+
+        const files = await response.json();
+        console.log("Files from backend:", files);
+
+        // Filter out the placeholder file and set the state
+        const filteredFiles = files.filter(
+          (file: any) => file.name !== ".emptyFolderPlaceholder"
+        );
+        setUserFiles(filteredFiles);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+      }
+    };
+
+    fetchFiles();
+  }, []); // Empty dependency array means this runs once on mount
 
   useEffect(() => {
     if (
@@ -175,22 +224,65 @@ export default function EnhancedNoteTab() {
     reader.readAsText(file);
   };
 
-  const saveNote = () => {
-    const newNote = {
-      id: Date.now().toString(),
-      title: noteTitle || "Untitled Note",
-      content: noteContent,
-      mode: noteMode,
-    };
+  const saveNote = async () => {
+    try {
+      // Get userId from localStorage
+      const userId = JSON.parse(localStorage.getItem("googleUser") || "{}").sub;
+      if (!userId) {
+        toast({
+          title: "Authentication Error",
+          description: "User ID not found. Please log in again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    setSavedNotes((prev) => [...prev, newNote]);
-    setNoteContent("");
-    setNoteTitle("Untitled Note");
+      const newNote = {
+        id: Date.now().toString(),
+        title: noteTitle || "Untitled Note",
+        content: noteContent,
+        mode: noteMode,
+      };
 
-    toast({
-      title: "Note saved",
-      description: `${newNote.title} has been saved.`,
-    });
+      // Save to local state
+      setSavedNotes((prev) => [...prev, newNote]);
+
+      // Save to backend
+      const response = await fetch("http://127.0.0.1:5000/api/users/files", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          file_content: noteContent,
+          file_name: `${noteTitle || "Untitled Note"}.txt`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save note to backend");
+      }
+
+      const result = await response.json();
+      console.log("Note saved to backend:", result);
+
+      // Clear the form
+      setNoteContent("");
+      setNoteTitle("Untitled Note");
+
+      toast({
+        title: "Note saved",
+        description: `${newNote.title} has been saved locally and to the cloud.`,
+      });
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your note to the cloud.",
+        variant: "destructive",
+      });
+    }
   };
 
   const loadNote = (id: string) => {
@@ -303,7 +395,7 @@ export default function EnhancedNoteTab() {
                 <CardTitle className="text-lg font-bold">Saved Notes</CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
-                {savedNotes.length === 0 ? (
+                {savedNotes.length === 0 && userFiles.length === 0 ? (
                   <p className="text-[#7de2d1] text-center py-4">
                     No saved notes yet
                   </p>
@@ -332,6 +424,31 @@ export default function EnhancedNoteTab() {
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+
+                    {userFiles.map((file) => (
+                      <li
+                        key={file.id}
+                        className="p-2 rounded cursor-pointer flex justify-between items-center hover:bg-[#3a4180]"
+                      >
+                        <div className="truncate flex-1">
+                          <span className="font-medium">{file.name}</span>
+                          <span className="text-xs text-[#7de2d1] ml-2">
+                            {new Date(file.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[#7de2d1] hover:text-[#f9e94e] hover:bg-[#3a4180]"
+                          onClick={() => {
+                            // Handle file selection
+                            console.log("Selected file:", file);
+                          }}
+                        >
+                          <FileText className="h-4 w-4" />
                         </Button>
                       </li>
                     ))}
@@ -369,7 +486,7 @@ export default function EnhancedNoteTab() {
                     variant="outline"
                     className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
                     onClick={() => {
-                      document.getElementById("file-upload")?.click()
+                      document.getElementById("file-upload")?.click();
                       console.log("File upload clicked");
                       console.log(document.getElementById("file-upload"));
                       // setNoteTitle(note.title);
