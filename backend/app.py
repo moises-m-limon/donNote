@@ -216,6 +216,9 @@ def summarize_file_1():
             summary = summerize_file(client, os.path.join(file_name),
                                      SUMMARIZE_FILE_USER_PROMPT, SUMMARIZE_FILE_SYSTEM_PROMPT)
 
+            print('here', SUMMARIZE_FILE_SYSTEM_PROMPT)
+            print('here', SUMMARIZE_FILE_USER_PROMPT)
+
             print(summary)
 
             with open("summary.txt", "w") as file:
@@ -247,13 +250,7 @@ def summarize_file():
 
             print(summary)
 
-            with open("summary.txt", "w") as file:
-                file.write(summary)
-
-            return jsonify({
-                "message": "File downloaded and saved successfully",
-                "summary": summary
-            }), 200
+            return summary, 200
 
         except Exception as e:
             return jsonify({

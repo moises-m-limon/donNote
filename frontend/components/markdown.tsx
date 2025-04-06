@@ -1,14 +1,14 @@
-"use client"
-import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Card, CardContent } from '@/components/ui/card';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import remarkGfm from 'remark-gfm';
-import 'katex/dist/katex.min.css';
+"use client";
+import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import { Card, CardContent } from "@/components/ui/card";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import remarkGfm from "remark-gfm";
+import "katex/dist/katex.min.css";
 
 const MarkdownReader = () => {
-  const [markdown, setMarkdown] = useState('');
+  const [markdown, setMarkdown] = useState("");
 
   useEffect(() => {
     // Example with various LaTeX expressions
@@ -22,7 +22,7 @@ const MarkdownReader = () => {
       <Card className="flex-1 bg-[#2a3270] border-[#7de2d1]">
         <CardContent className="p-6">
           <div className="prose dark:prose-invert max-w-none">
-            <ReactMarkdown 
+            <ReactMarkdown
               remarkPlugins={[remarkMath, remarkGfm]}
               rehypePlugins={[rehypeKatex]}
             >
@@ -50,7 +50,9 @@ const MarkdownReader = () => {
         .prose {
           color: #ffffff;
         }
-        .prose h1, .prose h2, .prose h3 {
+        .prose h1,
+        .prose h2,
+        .prose h3 {
           color: #7de2d1;
         }
         .prose strong {

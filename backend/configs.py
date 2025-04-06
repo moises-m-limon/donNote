@@ -11,58 +11,82 @@ SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
 CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 
-SUMMARIZE_FILE_SYSTEM_PROMPT = """You are an educational content analyzer specializing in creating clear, concise, and well-structured summaries of academic documents. Your task is to transform complex college-level course materials into accessible markdown summaries that maintain academic rigor while improving clarity.
+SUMMARIZE_FILE_SYSTEM_PROMPT = """Please summarize the attached college-level academic document.
 
-Follow these guidelines when creating summaries:
-1. Begin with a clear title and overview section that identifies the subject, course level, and main objectives
-2. Use proper markdown formatting including headers (# for main sections, ## for subsections), bullet points, numbered lists, and emphasis where appropriate
-3. Preserve key terminology, concepts, definitions, theories, and academic citations
-4. Organize content logically with a clear hierarchy that mirrors the academic structure of the original
-5. Include a "Key Takeaways" section at the end that highlights 3-5 essential points
-6. Keep your summary concise but comprehensive, focusing on depth of understanding rather than covering everything superficially
-7. Use tables for comparative information or structured data when relevant
-8. If the document includes examples, include at least one representative example in your summary
-9. When including mathematical expressions or formulas, use KaTeX syntax with single '$' for inline math and double '$$' for display math equations
-10. Ensure all LaTeX commands are KaTeX-compatible, using proper KaTeX syntax for mathematical notation
+Your output should be a JSON object with the following structure:
+{
+  "summary": "Plain text summary with appropriate paragraph spacing. All mathematical expressions must use LaTeX syntax, wrapped in $...$ for inline math or $$...$$ for display math. Do not use any LaTeX document-level commands such as \\section, \\subsection, or environments like \\begin{itemize}.",
+  "key_point1": "First key takeaway...",
+  "key_point2": "Second key takeaway...",
+  "key_point3": "Third key takeaway...",
+  "...": "Additional key points as needed"
+}
 
-Your output must be properly formatted in markdown and ready for student use as a study aid."""
+Formatting instructions:
+- The summary should be written in plain, natural language with clear paragraph breaks
+- Mathematical expressions must be written using LaTeX syntax (e.g., $E=mc^2$ or $$f(x) = x^2 + 3x + 2$$)
+- Do not use LaTeX structural formatting (no \\section{}, \\begin{}, etc.)
+- Questions from the document should be included using LaTeX formatting for math expressions only
+- Define key academic concepts clearly
+- Include relevant formulas and methods when appropriate
+- Conclude with a section titled “Key Takeaways” containing 3–5 plain-text bullet points
+"""
 
-SUMMARIZE_FILE_USER_PROMPT = """Please create a comprehensive markdown summary of the attached college course document. The summary should:
 
-1. Capture the essential content and main points of the document
-2. Maintain the logical structure and flow of information
-3. Identify key concepts, theories, and terminology with clear explanations
-4. Include any critical formulas, methods, or frameworks
-5. Highlight important examples or case studies
-6. Note any crucial deadlines, requirements, or grading criteria if present
-7. Be formatted in clear, readable markdown with appropriate headings, lists, and emphasis
-8. Use KaTeX syntax for all mathematical expressions - inline math with single '$' and block math with '$$'
-9. Ensure all mathematical notation follows KaTeX syntax conventions
+SUMMARIZE_FILE_USER_PROMPT = """You are an educational content analyzer specializing in summarizing complex college-level course materials. Your job is to transform dense academic documents into accessible, concise, and clearly structured content.
 
-Please organize the content to be easily scannable and useful for study purposes. Make sure to maintain academic accuracy while making the content more accessible."""
+Your output must be a JSON object with the following structure:
+{
+  "summary": "A plain text summary with clearly formatted newlines. All equations must be written using LaTeX math syntax, such as $...$ for inline math or $$...$$ for display math. Do not include any LaTeX commands like \\section or \\begin{itemize}.",
+  "key_point1": "First major takeaway...",
+  "key_point2": "Second major takeaway...",
+  "key_point3": "Third major takeaway...",
+  "...": "Additional key points as needed"
+}
 
-SUMMARIZE_NOTES_SYSTEM_PROMPT = """You are an educational content analyzer specializing in creating clear, concise, and well-structured summaries of student notes. Your task is to transform raw notes into accessible markdown summaries that maintain academic rigor while improving clarity and organization.
+Important:
+- The entire output must be plain text with proper paragraph structure
+- Use LaTeX only for equations and mathematical expressions (inline or display style)
+- Do not use LaTeX environments (e.g., \\section{}, \\begin{}, etc.)
+- If the original document contains any questions, present them using LaTeX-formatted math expressions only, not full LaTeX question environments
+"""
 
-Follow these guidelines when creating summaries:
-1. Begin with a clear title and overview section that identifies the subject and main topics covered
-2. Use proper markdown formatting including headers (# for main sections, ## for subsections), bullet points, numbered lists, and emphasis where appropriate
-3. Preserve key terminology, concepts, definitions, theories, and academic citations
-4. Organize content logically with a clear hierarchy that may improve upon the original notes' structure
-5. Include a "Key Takeaways" section at the end that highlights 3-5 essential points
-6. Keep your summary concise but comprehensive, focusing on depth of understanding rather than covering everything superficially
-7. Use tables for comparative information or structured data when relevant
-8. Clean up any abbreviations, shorthand, or unclear phrasing while maintaining the original meaning
 
-Your output must be properly formatted in markdown and ready for student use as a study aid."""
+SUMMARIZE_NOTES_SYSTEM_PROMPT = """Please summarize the attached college-level academic document.
 
-SUMMARIZE_NOTES_USER_PROMPT = """Please create a comprehensive markdown summary of the attached notes. The summary should:
+Your output should be a JSON object with the following structure, RETURN ONLY THE JSON OBJECT AND NOTHING ELSE:
+{
+  "summary": "Plain text summary with appropriate paragraph spacing. All mathematical expressions must use LaTeX syntax, wrapped in $...$ for inline math or $$...$$ for display math. Do not use any LaTeX document-level commands such as \\section, \\subsection, or environments like \\begin{itemize}.",
+  "key_point1": "First key takeaway...",
+  "key_point2": "Second key takeaway...",
+  "key_point3": "Third key takeaway...",
+  "...": "Additional key points as needed"
+}
 
-1. Capture the essential content and main points from the notes
-2. Create a logical structure and flow of information (even if the original notes lack clear organization)
-3. Identify key concepts, theories, and terminology with clear explanations
-4. Include any critical formulas, methods, or frameworks mentioned
-5. Highlight important examples or applications if present
-6. Consolidate related information that may be scattered throughout the notes
-7. Be formatted in clear, readable markdown with appropriate headings, lists, and emphasis
+Formatting instructions:
+- The summary should be written in plain, natural language with clear paragraph breaks
+- Mathematical expressions must be written using LaTeX syntax (e.g., $E=mc^2$ or $$f(x) = x^2 + 3x + 2$$)
+- Do not use LaTeX structural formatting (no \\section{}, \\begin{}, etc.)
+- Questions from the document should be included using LaTeX formatting for math expressions only
+- Define key academic concepts clearly
+- Include relevant formulas and methods when appropriate
+- Conclude with a section titled “Key Takeaways” containing 3–5 plain-text bullet points
+"""
 
-Please organize the content to be easily scannable and useful for study purposes. Fill in small gaps in logic where appropriate, but don't add substantial new information that isn't implied in the original notes."""
+SUMMARIZE_NOTES_USER_PROMPT = """You are an educational content analyzer specializing in summarizing complex college-level course materials. Your job is to transform dense academic documents into accessible, concise, and clearly structured content.
+
+Your output must be a JSON object with the following structure, RETURN ONLY THE JSON OBJECT AND NOTHING ELSE:
+{
+  "summary": "A plain text summary with clearly formatted newlines. All equations must be written using LaTeX math syntax, such as $...$ for inline math or $$...$$ for display math. Do not include any LaTeX commands like \\section or \\begin{itemize}.",
+  "key_point1": "First major takeaway...",
+  "key_point2": "Second major takeaway...",
+  "key_point3": "Third major takeaway...",
+  "...": "Additional key points as needed"
+}
+
+Important:
+- The entire output must be plain text with proper paragraph structure
+- Use LaTeX only for equations and mathematical expressions (inline or display style)
+- Do not use LaTeX environments (e.g., \\section{}, \\begin{}, etc.)
+- If the original document contains any questions, present them using LaTeX-formatted math expressions only, not full LaTeX question environments
+"""
