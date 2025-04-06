@@ -1,18 +1,22 @@
 import os
 import requests
 from dotenv import load_dotenv
+import json
 
 # ------------------------------------------------------------------------------
 # CONFIGURATION
 # ------------------------------------------------------------------------------
-CANVAS_BASE_URL = "https://usfca.instructure.com/"  # e.g., https://myinstitution.instructure.com
-# make an .env file that contains CANVAS_TOKEN to use
-CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
-DOWNLOAD_ROOT = '~/Documents/USF/ClassMaterials'
-
 load_dotenv()
+token = os.getenv("CAVNAS_API_KEY")
+CANVAS_BASE_URL = "https://usfca.instructure.com/"
+DOWNLOAD_ROOT = './ClassMaterials'
+
+if not os.path.exists(DOWNLOAD_ROOT):
+    os.makedirs(DOWNLOAD_ROOT)
+
 os.chdir(os.path.expanduser(DOWNLOAD_ROOT))
 # ------------------------------------------------------------------------------
+
 
 def get_favorite_courses(base_url, token):
     """
@@ -20,19 +24,20 @@ def get_favorite_courses(base_url, token):
     Returns a list of favorite course objects (JSON).
     """
     url = f"{base_url}/api/v1/users/self/favorites/courses"
-    
+
     # Create a session with the appropriate Authorization header
     session = requests.Session()
     session.headers.update({"Authorization": f"Bearer {token}"})
-    
+
     # Make the request
     response = session.get(url)
     response.raise_for_status()  # Raise an exception for HTTP errors
     return response.json()       # Return the JSON list of courses
 
+
 def get_favorite_courses_parsed():
     """Retrieve and print the user's favorite courses."""
-    favorites = get_favorite_courses(CANVAS_BASE_URL, CANVAS_TOKEN)
+    favorites = get_favorite_courses(CANVAS_BASE_URL, token)
     print("Your favorite courses:")
     courses = {}
     for course in favorites:
@@ -63,7 +68,8 @@ def download_folder(session, folder_obj, local_path):
     folder_name = folder_obj["name"]
 
     # Local folder for this folder_obj
-    current_folder_path = os.path.join(local_path, sanitize_filename(folder_name))
+    current_folder_path = os.path.join(
+        local_path, sanitize_filename(folder_name))
     os.makedirs(current_folder_path, exist_ok=True)
 
     # Download files in defined folder
@@ -134,7 +140,8 @@ def download_file(session, file_obj, local_folder):
         print(f"File already exists, skipping: {local_filename}")
         return
     if download_url == "":
-        print(f"This file is part of an unpublished module and is not available yet., skipping: {local_filename}")
+        print(
+            f"This file is part of an unpublished module and is not available yet., skipping: {local_filename}")
         return
     print(f"Downloading {filename} -> {local_path}")
     resp = session.get(download_url, stream=True)
@@ -178,7 +185,7 @@ def download_files_from_course(course_id, course_name):
     downloads all folders/files into a local directory structure.
     """
     session = requests.Session()
-    session.headers.update({"Authorization": f"Bearer {CANVAS_TOKEN}"})
+    session.headers.update({"Authorization": f"Bearer {token}"})
 
     # 1. Get the root folder for this course
     root_folder = get_root_folder_for_course(session, course_id=course_id)
@@ -192,3 +199,28 @@ def download_files_from_course(course_id, course_name):
     print(f"Starting download for course {course_id}...")
     download_folder(session, root_folder, course_name)
     print("Download complete.")
+
+
+# Save the current directory before changing it
+original_dir = os.getcwd()
+
+# Change to the download directory
+if not os.path.exists(DOWNLOAD_ROOT):
+    os.makedirs(DOWNLOAD_ROOT)
+
+os.chdir(os.path.expanduser(DOWNLOAD_ROOT))
+
+# Get favorite courses
+j = get_favorite_courses(CANVAS_BASE_URL, token)
+
+# Save the JSON file with proper error handling
+try:
+    with open('favorite_courses.json', 'w') as f:
+        json.dump(j, f, indent=2)  # Added indent for better readability
+    print(
+        f"Successfully saved favorite courses to {os.path.join(os.getcwd(), 'favorite_courses.json')}")
+except Exception as e:
+    print(f"Error saving favorite courses: {e}")
+
+# Change back to the original directory
+os.chdir(original_dir)
