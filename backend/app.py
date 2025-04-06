@@ -252,6 +252,7 @@ def summarize_file():
 
 
 if __name__ == '__main__':
+    print('t')
     prod = os.environ.get("DEV") or 'production'
     if prod == 'development':
         app.run(debug=True, use_reloader=False)
