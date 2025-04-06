@@ -6,10 +6,14 @@ from dotenv import load_dotenv
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
-from utils import get_favorite_courses, get_course_files
+from utils import get_favorite_courses, get_course_files, summerize
+from google import genai
+from prompts import SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT
 
 # Load environment variables
 load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -17,6 +21,8 @@ SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
 CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
+
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = Flask(__name__)
 
@@ -35,6 +41,7 @@ def home():
         return jsonify({"message": "Note created successfully"}), 201
     elif request.method == 'GET':
         return jsonify({"message": "Notes fetched successfully"}), 200
+
 
 class File:
     def __init__(self, userId, file_content, file_name=None):
@@ -55,6 +62,7 @@ class File:
             'file_name': self.file_name,
         }
 
+
 @app.route('/users/files', methods=['POST'])
 def create_file():
     try:
@@ -62,17 +70,17 @@ def create_file():
         user_id = data.get('userId')
         file_content = data.get('file_content', '')
         file_name = data.get('file_name', '')
-        
+
         if not user_id:
             return jsonify({"error": "User ID is required"}), 400
-            
+
         # Create a File object
         new_file = File(
             userId=user_id,
             file_content=file_content,
             file_name=file_name
         )
-        
+
         # If file content is provided, upload to Supabase
         if file_content and file_name:
             try:
@@ -83,18 +91,20 @@ def create_file():
                     file_content.encode(),
                     {"content-type": "text/plain"}
                 )
-                
+
                 # Get the public URL
-                file_url = supabase.storage.from_('donshack2025').get_public_url(file_path)
+                file_url = supabase.storage.from_(
+                    'donshack2025').get_public_url(file_path)
                 new_file.file_url = file_url
-                
+
             except Exception as e:
                 return jsonify({"error": f"Error uploading file to Supabase: {str(e)}"}), 500
-        
+
         return jsonify(new_file.to_dict()), 201
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/users', methods=['POST'])
 def get_file():
@@ -104,12 +114,12 @@ def get_file():
         files = supabase.storage.from_('donshack2025').list('users/'+user_id)
         print(files)
         if len(files) == 0:
-            return jsonify({"message":"No files found"}), 404
+            return jsonify({"message": "No files found"}), 404
         return jsonify(files), 200
     except Exception as e:
-        return jsonify({"message":"No files found"}), 500
-        
-            
+        return jsonify({"message": "No files found"}), 500
+
+
 @app.route('/api/courses', methods=['GET'])
 def get_courses():
     if request.method == 'GET':
@@ -159,6 +169,44 @@ def get_course_files_endpoint(course_id):
             "message": "Failed to fetch files",
             "error": str(e)
         }), 500
+
+@app.route('/api/summarize', methods=['POST'])
+def summarize():
+    if request.method == 'POST':
+        data = request.get_json()
+        file_name = data.get("file_name")
+        id = data.get("id")
+
+        # Create temp directory if it doesn't exist
+        if not os.path.exists('temp'):
+            os.makedirs('temp')
+
+        try:
+            # Download the file from Supabase
+            response = supabase.storage.from_("donshack2025").download(
+                "users/" + id + "/" + file_name)
+
+            # Write the response to a file in the temp directory
+            with open(os.path.join('temp', file_name), "wb") as file:
+                file.write(response)
+
+            # Summarize the file
+            summary = summerize(client, os.path.join(file_name),
+                                SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT)
+
+            print(summary)
+
+            return jsonify({
+                "message": "File downloaded and saved successfully",
+                "path": os.path.join('temp', file_name)
+            }), 200
+
+        except Exception as e:
+            return jsonify({
+                "message": "Failed to download or save file",
+                "error": str(e)
+            }), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
