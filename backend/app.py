@@ -313,8 +313,11 @@ def generate_questions_file():
             }), 500
 
 
-@app.route('/api/generate-questions-text', methods=['POST'])
+@app.route('/api/generate-questions-text', methods=['POST', 'OPTIONS'])
 def generate_questions_text():
+    if request.method == 'OPTIONS':
+        response = jsonify({})
+        return response
     if request.method == 'POST':
         data = request.get_json()
         text = data.get("text")

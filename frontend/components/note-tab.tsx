@@ -363,7 +363,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
 
     try {
       // You would replace this with your actual API endpoint
-      const response = await fetch("http://127.0.0.1:5000/api/notes", {
+      const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

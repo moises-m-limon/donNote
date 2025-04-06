@@ -10,18 +10,27 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, Download, RefreshCw, CheckCircle2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 
+interface Question {
+  id: number
+  question: string
+  type: "true_false" | "multiple_choice"
+  difficulty: string
+  explanation: string
+  correct_answer: boolean | number
+  options?: string[]
+}
+
 interface QuizGeneratorProps {
   content: string
 }
 
 export default function QuizGenerator({ content }: QuizGeneratorProps) {
-  const [quizType, setQuizType] = useState("multiple-choice")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [quizQuestions, setQuizQuestions] = useState<any[]>([])
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({})
+  const [quizQuestions, setQuizQuestions] = useState<Question[]>([])
+  const [userAnswers, setUserAnswers] = useState<Record<number, boolean | number>>({})
   const [showResults, setShowResults] = useState(false)
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!content) {
       toast({
         title: "No content for quiz",
@@ -36,99 +45,40 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
     setUserAnswers({})
     setShowResults(false)
 
-    // Simulate API call
-    setTimeout(() => {
-      let generatedQuestions = []
+    try {
+      const response = await fetch('https://donnote-427348651859.us-west1.run.app/api/generate-questions-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: content,
+          num_questions: 5
+        }),
+      })
 
-      if (quizType === "multiple-choice") {
-        generatedQuestions = [
-          {
-            id: "q1",
-            question: "What is the main purpose of this application?",
-            options: [
-              { id: "a", text: "Video editing" },
-              { id: "b", text: "Note-taking and summarization" },
-              { id: "c", text: "Social networking" },
-              { id: "d", text: "Gaming" },
-            ],
-            correctAnswer: "b",
-          },
-          {
-            id: "q2",
-            question: "Which feature allows for converting speech to text?",
-            options: [
-              { id: "a", text: "Knowledge Graph" },
-              { id: "b", text: "Quiz Generator" },
-              { id: "c", text: "Voice to Text" },
-              { id: "d", text: "Summarizer" },
-            ],
-            correctAnswer: "c",
-          },
-          {
-            id: "q3",
-            question: "What does the Knowledge Graph feature do?",
-            options: [
-              { id: "a", text: "Creates quizzes" },
-              { id: "b", text: "Records audio" },
-              { id: "c", text: "Visualizes relationships between concepts" },
-              { id: "d", text: "Translates text" },
-            ],
-            correctAnswer: "c",
-          },
-        ]
-      } else if (quizType === "open-ended") {
-        generatedQuestions = [
-          {
-            id: "q1",
-            question: "Explain the main purpose of this application and how it can help students.",
-            sampleAnswer:
-              "This application is designed for intelligent note-taking and study assistance. It helps students by transcribing lectures, summarizing content, visualizing knowledge, and generating quizzes for better retention.",
-          },
-          {
-            id: "q2",
-            question: "Describe how the Knowledge Graph feature works and its benefits.",
-            sampleAnswer:
-              "The Knowledge Graph feature creates visual representations of concepts and their relationships. It helps students understand connections between ideas, identify key concepts, and remember information through visual learning.",
-          },
-        ]
-      } else if (quizType === "mixed") {
-        generatedQuestions = [
-          {
-            id: "q1",
-            type: "multiple-choice",
-            question: "Which integration does the application support?",
-            options: [
-              { id: "a", text: "Google Classroom" },
-              { id: "b", text: "Microsoft Teams" },
-              { id: "c", text: "Canvas LMS" },
-              { id: "d", text: "Blackboard" },
-            ],
-            correctAnswer: "c",
-          },
-          {
-            id: "q2",
-            type: "open-ended",
-            question: "Explain how the voice navigation feature enhances accessibility.",
-            sampleAnswer:
-              "The voice navigation feature enhances accessibility by allowing users to control the application using voice commands. This is particularly helpful for users with mobility impairments or those who prefer hands-free operation.",
-          },
-        ]
+      if (!response.ok) {
+        throw new Error('Failed to generate questions')
       }
 
-      setQuizQuestions(generatedQuestions)
-      setIsGenerating(false)
-
+      const data = await response.json()
+      setQuizQuestions(data.questions)
       toast({
         title: "Quiz generated",
-        description: `${quizType
-          .split("-")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ")} quiz created successfully.`,
+        description: `Generated ${data.questions.length} questions successfully.`,
       })
-    }, 1500)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate quiz questions.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
-  const handleAnswerChange = (questionId: string, answer: string) => {
+  const handleAnswerChange = (questionId: number, answer: boolean | number) => {
     setUserAnswers({
       ...userAnswers,
       [questionId]: answer,
@@ -138,9 +88,12 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
   const handleSubmitQuiz = () => {
     setShowResults(true)
 
-    const correctAnswers = quizQuestions.filter((q) => q.correctAnswer && userAnswers[q.id] === q.correctAnswer).length
+    const correctAnswers = quizQuestions.filter((q) => {
+      const userAnswer = userAnswers[q.id]
+      return userAnswer === q.correct_answer
+    }).length
 
-    const totalQuestions = quizQuestions.filter((q) => q.correctAnswer).length
+    const totalQuestions = quizQuestions.length
 
     toast({
       title: "Quiz submitted",
@@ -149,9 +102,41 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
   }
 
   const handleDownload = () => {
+    // Create quiz content for download
+    const quizContent = quizQuestions.map((q, index) => {
+      const userAnswer = userAnswers[q.id]
+      const isCorrect = userAnswer === q.correct_answer
+      
+      let answerText = ''
+      if (q.type === 'true_false') {
+        answerText = `Your answer: ${userAnswer ? 'True' : 'False'}\nCorrect answer: ${q.correct_answer ? 'True' : 'False'}`
+      } else if (q.type === 'multiple_choice' && q.options) {
+        answerText = `Your answer: ${q.options[userAnswer as number]}\nCorrect answer: ${q.options[q.correct_answer as number]}`
+      }
+
+      return `
+Question ${index + 1}: ${q.question}
+Type: ${q.type}
+Difficulty: ${q.difficulty}
+${q.type === 'multiple_choice' && q.options ? '\nOptions:\n' + q.options.map((opt, i) => `${i + 1}. ${opt}`).join('\n') : ''}
+${showResults ? `\n${answerText}\nExplanation: ${q.explanation}` : ''}
+-------------------`
+    }).join('\n\n')
+
+    // Create and download file
+    const blob = new Blob([quizContent], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'quiz.txt'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
     toast({
-      title: "Download started",
-      description: "Quiz has been downloaded as a PDF.",
+      title: "Download complete",
+      description: "Quiz has been downloaded as a text file.",
     })
   }
 
@@ -159,28 +144,14 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle>Quiz Generator</CardTitle>
-        <CardDescription>Create quizzes to test your knowledge</CardDescription>
+        <CardDescription>Test your knowledge with AI-generated questions</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center space-x-2 mb-4">
-          <Tabs defaultValue={quizType} onValueChange={setQuizType} className="w-full">
-            <TabsList className="grid grid-cols-3">
-              <TabsTrigger value="multiple-choice" className="text-xs">
-                Multiple Choice
-              </TabsTrigger>
-              <TabsTrigger value="open-ended" className="text-xs">
-                Open Ended
-              </TabsTrigger>
-              <TabsTrigger value="mixed" className="text-xs">
-                Mixed
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
           <Button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="bg-primary text-secondary hover:bg-primary/90 whitespace-nowrap"
+            className="bg-primary text-secondary hover:bg-primary/90"
           >
             {isGenerating ? (
               <>
@@ -190,7 +161,7 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
             ) : (
               <>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Generate
+                Generate Quiz
               </>
             )}
           </Button>
@@ -200,47 +171,61 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
           <div className="space-y-6">
             {quizQuestions.map((question, index) => (
               <div key={question.id} className="border rounded-md p-4">
-                <h3 className="font-medium mb-2">
-                  Question {index + 1}: {question.question}
-                </h3>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-medium">Question {index + 1}: {question.question}</h3>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    question.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                    question.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {question.difficulty}
+                  </span>
+                </div>
 
-                {(question.type === "multiple-choice" || !question.type) && question.options && (
+                {question.type === "true_false" && (
                   <RadioGroup
-                    value={userAnswers[question.id] || ""}
-                    onValueChange={(value) => handleAnswerChange(question.id, value)}
+                    value={userAnswers[question.id]?.toString() || ""}
+                    onValueChange={(value) => handleAnswerChange(question.id, value === "true")}
                     disabled={showResults}
+                    className="space-y-2"
                   >
-                    <div className="space-y-2">
-                      {question.options.map((option: any) => (
-                        <div key={option.id} className="flex items-center space-x-2">
-                          <RadioGroupItem value={option.id} id={`${question.id}-${option.id}`} />
-                          <Label htmlFor={`${question.id}-${option.id}`} className="flex-1">
-                            {option.text}
-                          </Label>
-                          {showResults && question.correctAnswer === option.id && (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          )}
-                        </div>
-                      ))}
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="true" id={`${question.id}-true`} />
+                      <Label htmlFor={`${question.id}-true`}>True</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="false" id={`${question.id}-false`} />
+                      <Label htmlFor={`${question.id}-false`}>False</Label>
                     </div>
                   </RadioGroup>
                 )}
 
-                {(question.type === "open-ended" || (!question.type && !question.options)) && (
-                  <div className="space-y-2">
-                    <Textarea
-                      placeholder="Type your answer here..."
-                      value={userAnswers[question.id] || ""}
-                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                      disabled={showResults}
-                      className="min-h-[100px]"
-                    />
-                    {showResults && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium">Sample Answer:</p>
-                        <p className="text-sm text-gray-600">{question.sampleAnswer}</p>
+                {question.type === "multiple_choice" && question.options && (
+                  <RadioGroup
+                    value={userAnswers[question.id]?.toString() || ""}
+                    onValueChange={(value) => handleAnswerChange(question.id, parseInt(value))}
+                    disabled={showResults}
+                    className="space-y-2"
+                  >
+                    {question.options.map((option, optionIndex) => (
+                      <div key={optionIndex} className="flex items-center space-x-2">
+                        <RadioGroupItem value={optionIndex.toString()} id={`${question.id}-${optionIndex}`} />
+                        <Label htmlFor={`${question.id}-${optionIndex}`}>{option}</Label>
                       </div>
-                    )}
+                    ))}
+                  </RadioGroup>
+                )}
+
+                {showResults && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                    <p className={`text-sm font-medium ${
+                      userAnswers[question.id] === question.correct_answer
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}>
+                      {userAnswers[question.id] === question.correct_answer ? 'Correct!' : 'Incorrect'}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">{question.explanation}</p>
                   </div>
                 )}
               </div>
