@@ -1,138 +1,3 @@
-// "use client"
-
-// import { useState } from "react"
-// import { Button } from "@/components/ui/button"
-// import { Textarea } from "@/components/ui/textarea"
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-// import { Mic, Upload, BrainCircuit, FileQuestion, BookmarkPlus, PauseCircle } from "lucide-react"
-// import KnowledgeGraph from "@/components/knowledge-graph"
-// import QuizGenerator from "@/components/quiz-generator"
-// import Summarizer from "@/components/summarizer"
-// import { toast } from "@/hooks/use-toast"
-
-// export default function NoteTab() {
-//   const [isRecording, setIsRecording] = useState(false)
-//   const [noteContent, setNoteContent] = useState("")
-//   const [activeWidget, setActiveWidget] = useState<string | null>(null)
-
-//   const toggleRecording = () => {
-//     setIsRecording(!isRecording)
-//     if (!isRecording) {
-//       toast({
-//         title: "Recording started",
-//         description: "Speak clearly into your microphone.",
-//       })
-//     } else {
-//       toast({
-//         title: "Recording stopped",
-//         description: "Your speech has been transcribed.",
-//       })
-//       // Simulate adding transcribed text
-//       setNoteContent(
-//         noteContent +
-//           "\n\nThis is simulated transcribed text from your voice recording. The actual implementation would use the Web Speech API or a similar service to convert speech to text in real-time.",
-//       )
-//     }
-//   }
-
-//   const handleUpload = () => {
-//     // Simulate file upload
-//     toast({
-//       title: "File upload",
-//       description: "Select a file to upload and summarize.",
-//     })
-//   }
-
-//   const handleAssignToClass = () => {
-//     toast({
-//       title: "Assign to class",
-//       description: "Select a class to assign this note to.",
-//     })
-//   }
-
-//   return (
-//     <div className="flex flex-col h-full">
-//       <div className="p-4 flex-1 overflow-auto">
-//         <div className="mb-4">
-//           <Textarea
-//             placeholder="Start typing your notes here..."
-//             className="min-h-[200px] resize-none border-gray-300"
-//             value={noteContent}
-//             onChange={(e) => setNoteContent(e.target.value)}
-//           />
-//           <div className="flex mt-2 space-x-2">
-//             <Button
-//               variant={isRecording ? "destructive" : "outline"}
-//               size="sm"
-//               onClick={toggleRecording}
-//               className={isRecording ? "bg-red-500 hover:bg-red-600" : ""}
-//             >
-//               {isRecording ? (
-//                 <>
-//                   <PauseCircle className="mr-2 h-4 w-4" />
-//                   Stop Recording
-//                 </>
-//               ) : (
-//                 <>
-//                   <Mic className="mr-2 h-4 w-4" />
-//                   Voice to Text
-//                 </>
-//               )}
-//             </Button>
-//             <Button variant="outline" size="sm" onClick={handleUpload}>
-//               <Upload className="mr-2 h-4 w-4" />
-//               Upload Document
-//             </Button>
-//             <Button variant="outline" size="sm" onClick={handleAssignToClass}>
-//               <BookmarkPlus className="mr-2 h-4 w-4" />
-//               Assign to Class
-//             </Button>
-//           </div>
-//         </div>
-
-//         <div className="grid grid-cols-1 gap-4">
-//           <Tabs
-//             value={activeWidget || "none"}
-//             onValueChange={(value) => setActiveWidget(value === "none" ? null : value)}
-//           >
-//             <TabsList className="grid grid-cols-3 mb-4">
-//               <TabsTrigger
-//                 value="summarize"
-//                 className="data-[state=active]:bg-primary data-[state=active]:text-secondary"
-//               >
-//                 <Upload className="mr-2 h-4 w-4" />
-//                 Summarize
-//               </TabsTrigger>
-//               <TabsTrigger
-//                 value="knowledge-graph"
-//                 className="data-[state=active]:bg-primary data-[state=active]:text-secondary"
-//               >
-//                 <BrainCircuit className="mr-2 h-4 w-4" />
-//                 Knowledge Graph
-//               </TabsTrigger>
-//               <TabsTrigger value="quiz" className="data-[state=active]:bg-primary data-[state=active]:text-secondary">
-//                 <FileQuestion className="mr-2 h-4 w-4" />
-//                 Generate Quiz
-//               </TabsTrigger>
-//             </TabsList>
-
-//             <TabsContent value="summarize">
-//               <Summarizer content={noteContent} />
-//             </TabsContent>
-
-//             <TabsContent value="knowledge-graph">
-//               <KnowledgeGraph content={noteContent} />
-//             </TabsContent>
-
-//             <TabsContent value="quiz">
-//               <QuizGenerator content={noteContent} />
-//             </TabsContent>
-//           </Tabs>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -243,22 +108,67 @@ export default function EnhancedNoteTab() {
     setIsRecording(!isRecording);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Get userId from localStorage
+    const userId = JSON.parse(localStorage.getItem('googleUser') || '{}').sub;
+    console.log(userId);
+    if (!userId) {
+      toast({
+        title: "Authentication Error",
+        description: "User ID not found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       if (event.target?.result) {
+        // First set the content in the UI
         setNoteContent(event.target.result as string);
+        
+        try {
+          // Prepare the data for the API call
+          const fileData = {
+            userId: userId, // Now using the userId from localStorage
+            file_content: event.target.result as string,
+            file_name: file.name
+          };
+          console.log(fileData);
+          // Make the API call
+          const response = await fetch('http://localhost:5000/api/users/files', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(fileData)
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to upload file');
+          }
+
+          const result = await response.json();
+          
+          toast({
+            title: "File uploaded successfully",
+            description: `${file.name} has been uploaded and processed.`,
+          });
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          toast({
+            title: "Upload failed",
+            description: "There was an error uploading your file.",
+            variant: "destructive",
+          });
+        }
       }
     };
+
     reader.readAsText(file);
-    
-    toast({
-      title: "File uploaded",
-      description: `${file.name} has been loaded.`,
-    });
   };
 
   const saveNote = () => {
@@ -456,6 +366,7 @@ export default function EnhancedNoteTab() {
                     className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
                     onClick={() =>
                       document.getElementById("file-upload")?.click()
+                      
                     }
                   >
                     <Upload className="mr-2 h-4 w-4" />
@@ -465,7 +376,7 @@ export default function EnhancedNoteTab() {
                     type="file"
                     id="file-upload"
                     className="hidden"
-                    accept=".txt,.md"
+                    accept=".txt,.md,.pdf"
                     onChange={handleFileUpload}
                   />
                 </div>

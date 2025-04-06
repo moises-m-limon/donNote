@@ -103,7 +103,6 @@ export default function Summarizer({ content }: SummarizerProps) {
         )}
       </CardContent>
     </Card>
-    <MarkdownReader markdown={summary} />
     </>
   )
 }
