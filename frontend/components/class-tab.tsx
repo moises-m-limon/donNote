@@ -333,7 +333,7 @@ export default function ClassTab() {
             </div>
           ) : (
             <>
-              <h1 className="text-3xl font-bold mb-6 text-[#7de2d1]">Dashboard</h1>
+              <h1 className="text-3xl font-bold mb-6 text-[#f9e94e]">Dashboard</h1>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {isLoading ? (
@@ -380,7 +380,7 @@ export default function ClassTab() {
                     </Card>
                   ))
                 ) : (
-                  <p className="text-[#7de2d1]/60">No courses found. Please check your Canvas integration.</p>
+                  <p className="text-[#f9e94e]/60">No courses found. Please check your Canvas integration.</p>
                 )}
               </div>
             </>
