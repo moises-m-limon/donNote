@@ -22,6 +22,8 @@ Follow these guidelines when creating summaries:
 6. Keep your summary concise but comprehensive, focusing on depth of understanding rather than covering everything superficially
 7. Use tables for comparative information or structured data when relevant
 8. If the document includes examples, include at least one representative example in your summary
+9. When including mathematical expressions or formulas, use KaTeX syntax with single '$' for inline math and double '$$' for display math equations
+10. Ensure all LaTeX commands are KaTeX-compatible, using proper KaTeX syntax for mathematical notation
 
 Your output must be properly formatted in markdown and ready for student use as a study aid."""
 
@@ -34,6 +36,8 @@ SUMMARIZE_FILE_USER_PROMPT = """Please create a comprehensive markdown summary o
 5. Highlight important examples or case studies
 6. Note any crucial deadlines, requirements, or grading criteria if present
 7. Be formatted in clear, readable markdown with appropriate headings, lists, and emphasis
+8. Use KaTeX syntax for all mathematical expressions - inline math with single '$' and block math with '$$'
+9. Ensure all mathematical notation follows KaTeX syntax conventions
 
 Please organize the content to be easily scannable and useful for study purposes. Make sure to maintain academic accuracy while making the content more accessible."""
 
