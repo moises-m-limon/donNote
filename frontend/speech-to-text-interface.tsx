@@ -239,13 +239,13 @@ export default function SpeechToTextInterface() {
                         className={`p-2 rounded cursor-pointer flex justify-between items-center ${
                           selectedNoteId === note.id
                             ? "bg-[#f9e94e] text-[#1e2761]"
-                            : "hover:bg-[#3a4180]"
+                            : "text-white hover:bg-[#3a4180]"
                         }`}
                         onClick={() => loadNote(note.id)}
                       >
                         <div className="truncate flex-1">
-                          <span className="font-medium">{note.title}</span>
-                          <div className="text-xs opacity-70">
+                          <span className="font-medium text-white/70">{note.title}</span>
+                          <div className="text-xs text-white/70">
                             {note.mode === "bigpicture"
                               ? "Big Picture"
                               : "Detailed"}{" "}
@@ -255,7 +255,7 @@ export default function SpeechToTextInterface() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-100/20"
+                          className="h-8 w-8 text-[#7de2d1] hover:text-[#7de2d1] hover:bg-[#7de2d1]/20"
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteNote(note.id);
@@ -278,7 +278,7 @@ export default function SpeechToTextInterface() {
                 <Button
                   className={`w-full ${
                     isRecording
-                      ? "bg-red-500 hover:bg-red-600"
+                      ? "bg-[#7de2d1] hover:bg-[#6dd2c1] text-[#1e2761]"
                       : "bg-[#f9e94e] text-[#1e2761] hover:bg-[#e9d93e]"
                   }`}
                   onClick={toggleRecording}
@@ -332,13 +332,13 @@ export default function SpeechToTextInterface() {
                 </Button>
 
                 {submitStatus === "success" && (
-                  <p className="text-green-400 text-sm text-center">
+                  <p className="text-[#7de2d1] text-sm text-center">
                     Note submitted successfully!
                   </p>
                 )}
 
                 {submitStatus === "error" && (
-                  <p className="text-red-400 text-sm text-center">
+                  <p className="text-[#f9e94e] text-sm text-center">
                     Failed to submit note. Please try again.
                   </p>
                 )}

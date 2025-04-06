@@ -1,78 +1,110 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Search, ChevronDown, Clock, FileText, Video, Music, Presentation, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, ChevronDown, Clock, FileText, Video, Music, Presentation, ChevronLeft, ChevronRight, Trash2 } from "lucide-react"
+import { createClient } from "@supabase/supabase-js"
 
-export default function HistoryPanel() {
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_API_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+interface HistoryPanelProps {
+  setNoteContent: (content: string) => void;
+  setNoteTitle: (title: string) => void;
+}
+
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  mode: string;
+  created_at?: string;
+}
+
+export default function HistoryPanel({ setNoteContent, setNoteTitle }: HistoryPanelProps) {
   const [searchQuery, setSearchQuery] = useState("")
-  const [isOpen, setIsOpen] = useState(true)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
+  const [savedNotes, setSavedNotes] = useState<Note[]>([])
+  const [userFiles, setUserFiles] = useState<Array<{ id: string; name: string; created_at: string; updated_at: string }>>([])
 
-  const mockHistory = [
-    { id: "1", title: "Biology Notes", type: "note", date: "2023-04-15T10:30:00", class: "Biology 101" },
-    {
-      id: "2",
-      title: "CS Lecture Recording",
-      type: "audio",
-      date: "2023-04-14T14:45:00",
-      class: "Computer Science 202",
-    },
-    { id: "3", title: "Psychology Quiz", type: "quiz", date: "2023-04-13T09:15:00", class: "Psychology 110" },
-    { id: "4", title: "Study Session", type: "note", date: "2023-04-12T16:20:00", class: "Biology 101" },
-    {
-      id: "5",
-      title: "Midterm Presentation",
-      type: "presentation",
-      date: "2023-04-11T11:00:00",
-      class: "Computer Science 202",
-    },
-    { id: "6", title: "Research Methods", type: "video", date: "2023-04-10T13:30:00", class: "Psychology 110" },
-  ]
+  // Fetch user files on component mount
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const userId = JSON.parse(localStorage.getItem("googleUser") || "{}").sub;
+        if (!userId) {
+          console.log("No user ID found");
+          return;
+        }
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "note":
-        return <FileText className="h-4 w-4 text-[#7de2d1]" />
-      case "audio":
-        return <Music className="h-4 w-4 text-[#f9e94e]" />
-      case "video":
-        return <Video className="h-4 w-4 text-[#f9e94e]" />
-      case "presentation":
-        return <Presentation className="h-4 w-4 text-[#7de2d1]" />
-      default:
-        return <FileText className="h-4 w-4 text-[#7de2d1]" />
+        const response = await fetch("http://127.0.0.1:5000/api/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch files");
+
+        const files = await response.json();
+        const filteredFiles = files.filter((file: any) => file.name !== ".emptyFolderPlaceholder");
+        setUserFiles(filteredFiles);
+      } catch (error) {
+        console.error("Error fetching files:", error);
+      }
+    };
+
+    fetchFiles();
+  }, []);
+
+  const loadNote = (id: string) => {
+    const note = savedNotes.find((note) => note.id === id);
+    if (note) {
+      setNoteContent(note.content);
+      setNoteTitle(note.title);
+      setSelectedNoteId(id);
     }
-  }
+  };
 
-  const filteredHistory = mockHistory.filter(
-    (item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.class.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  const deleteNote = (id: string) => {
+    setSavedNotes((prev) => prev.filter((note) => note.id !== id));
+    if (selectedNoteId === id) {
+      setSelectedNoteId(null);
+      setNoteContent("");
+      setNoteTitle("Untitled Note");
+    }
+  };
+
+  const filteredNotes = [...savedNotes, ...userFiles.map(file => ({
+    id: file.id,
+    title: file.name,
+    content: "",
+    mode: "file",
+    created_at: file.created_at
+  }))].filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className={`flex flex-col h-full bg-[#1e2761] text-white transition-all duration-300 ${isCollapsed ? 'w-[50px]' : 'w-80'}`}>
-      <div className="p-4 border-b border-[#7de2d1]/20 flex justify-between items-center">
-        <div className="text-[#7de2d1]">
-          <Button 
+    <div className={`flex flex-col h-full bg-[#2a3270] border-l border-[#7de2d1]/20 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-[240px]'}`}>
+      <div className="p-4 border-b border-[#7de2d1]/20">
+        <Button 
           variant="ghost" 
-          size="lg" 
-          className="text-[#7de2d1] font-semibold flex items-center gap-2 p-1 hover:bg-[#2a3270] h-16 w-"
+          size="sm" 
+          className="text-[#7de2d1] hover:bg-[#3a4180] w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
+          <Clock className="h-8 w-8 flex-shrink-0" />
+          {!isCollapsed && <span className="font-medium flex-1 text-left">History</span>}
           {isCollapsed ? 
-            <div className="flex items-center justify-center"><ChevronLeft className="h-16 w-16" /><Clock className="h-5 w-5"/></div> : 
-            <ChevronRight className="h-8 w-8" />
+            <ChevronRight className="h-4 w-4" /> : 
+            <ChevronLeft className="h-4 w-4" />
           }
-        {!isCollapsed && <>
-            <div onClick={() => setIsCollapsed(!isCollapsed)}>
-            <div className="flex items-center justify-center"><Clock className="h-5 w-5" /><div className="p-1">History</div></div>
-            </div>
-          </>}</Button>
-        </div>
+        </Button>
       </div>
 
       {!isCollapsed && (
@@ -88,49 +120,65 @@ export default function HistoryPanel() {
               />
               <Search className="absolute right-2 top-2.5 h-4 w-4 text-[#7de2d1]" />
             </div>
-
-            <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-3">
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="flex items-center justify-between w-full p-2 text-sm text-[#7de2d1] hover:bg-[#2a3270] hover:text-[#7de2d1]">
-                  <span>Search Suggestions</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "transform rotate-180" : ""}`} />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="grid grid-cols-2 gap-1 mt-1">
-                  {["has:audio", "has:video", "class:biology", "before:today", "after:lastweek"].map((suggestion) => (
-                    <Button
-                      key={suggestion}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs justify-start h-7 border-[#7de2d1]/20 text-[#7de2d1] hover:bg-[#2a3270] hover:text-[#7de2d1]"
-                      onClick={() => setSearchQuery(suggestion)}
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
           </div>
 
           <div className="flex-1 overflow-auto">
             <div className="p-2">
-              {filteredHistory.length > 0 ? (
-                <ul className="space-y-1">
-                  {filteredHistory.map((item) => (
-                    <li key={item.id} className="p-2 hover:bg-[#2a3270] rounded cursor-pointer">
-                      <div className="flex items-start">
-                        <div className="mr-2 mt-0.5">{getIcon(item.type)}</div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[#f9e94e]">{item.title}</p>
-                          <p className="text-xs text-[#7de2d1]">{item.class}</p>
-                          <p className="text-xs text-white/40">
-                            {new Date(item.date).toLocaleDateString()} at{" "}
-                            {new Date(item.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </p>
+              {filteredNotes.length > 0 ? (
+                <ul className="space-y-2">
+                  {filteredNotes.map((item) => (
+                    <li
+                      key={item.id}
+                      className={`p-2 rounded cursor-pointer flex justify-between items-center ${
+                        selectedNoteId === item.id
+                          ? "bg-[#7de2d1] text-[#1e2761]"
+                          : "hover:bg-[#3a4180] text-white/70"
+                      }`}
+                      onClick={async () => {
+                        if (item.mode === "file") {
+                          const userId = JSON.parse(localStorage.getItem("googleUser") || "{}").sub;
+                          const filePath = `users/${userId}/${item.title}`;
+                          const { data } = supabase.storage.from("donshack2025").getPublicUrl(filePath);
+
+                          try {
+                            const response = await fetch(data.publicUrl);
+                            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                            const text = await response.text();
+                            setNoteContent(text);
+                            setNoteTitle(item.title.replace(".txt", ""));
+                            setSelectedNoteId(item.id);
+                          } catch (error) {
+                            console.error("Error fetching file contents:", error);
+                          }
+                        } else {
+                          loadNote(item.id);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <FileText className="h-4 w-4 flex-shrink-0 text-[#7de2d1]" />
+                        <div className="truncate">
+                          <span className="font-medium">{item.title}</span>
+                          {item.created_at && (
+                            <span className="text-xs text-[#7de2d1] ml-2">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </span>
+                          )}
                         </div>
                       </div>
+                      {item.mode !== "file" && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-[#7de2d1] hover:text-[#f9e94e] hover:bg-[#3a4180]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNote(item.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </li>
                   ))}
                 </ul>

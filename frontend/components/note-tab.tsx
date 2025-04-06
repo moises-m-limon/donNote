@@ -40,10 +40,15 @@ declare global {
   }
 }
 
-export default function EnhancedNoteTab() {
+interface NoteTabProps {
+  noteContent: string;
+  setNoteContent: (content: string) => void;
+  noteTitle: string;
+  setNoteTitle: (title: string) => void;
+}
+
+export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNoteTitle }: NoteTabProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [noteContent, setNoteContent] = useState("");
-  const [noteTitle, setNoteTitle] = useState("Untitled Note");
   const [noteMode, setNoteMode] = useState("detailed");
   const [activeWidget, setActiveWidget] = useState<string | null>(null);
   const [savedNotes, setSavedNotes] = useState<
@@ -63,7 +68,7 @@ export default function EnhancedNoteTab() {
     }>
   >([]);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<typeof SpeechRecognition | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Add useEffect to fetch files on component mount
@@ -395,14 +400,8 @@ export default function EnhancedNoteTab() {
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-center mb-8">
           <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <div className="bg-[#f9e94e] p-2 rounded-md">
-              <h1 className="text-[#1e2761] text-2xl md:text-3xl font-bold tracking-tight">
-                DONS HACK
-              </h1>
-            </div>
-            <div className="bg-[#7de2d1] px-2 py-1 rounded text-[#1e2761] text-xs font-bold">
-              NOTES
-            </div>
+           
+           
           </div>
           <div className="flex gap-2">
             <Button
@@ -418,108 +417,7 @@ export default function EnhancedNoteTab() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
-            <Card className="bg-[#2a3270] border-[#7de2d1]">
-              <CardHeader className="bg-[#7de2d1] text-[#1e2761]">
-                <CardTitle className="text-lg font-bold">Saved Notes</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {savedNotes.length === 0 && userFiles.length === 0 ? (
-                  <p className="text-[#7de2d1] text-center py-4">
-                    No saved notes yet
-                  </p>
-                ) : (
-                  <ul className="space-y-2">
-                    {savedNotes.map((note) => (
-                      <li
-                        key={note.id}
-                        className={`p-2 rounded cursor-pointer flex justify-between items-center ${
-                          selectedNoteId === note.id
-                            ? "bg-[#f9e94e] text-[#1e2761]"
-                            : "hover:bg-[#3a4180]"
-                        }`}
-                        onClick={() => {
-                          console.log("Note clicked:", note.title);
-                          loadNote(note.id);
-                        }}
-                      >
-                        <div className="truncate flex-1">
-                          <span className="font-medium">{note.title}</span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-100/20"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNote(note.id);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </li>
-                    ))}
-
-                    {userFiles.map((file) => (
-                      <li
-                        key={file.id}
-                        className="p-2 rounded cursor-pointer flex justify-between items-center hover:bg-[#3a4180]"
-                      >
-                        <div className="truncate flex-1">
-                          <span className="font-medium">{file.name}</span>
-                          <span className="text-xs text-[#7de2d1] ml-2">
-                            {new Date(file.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-[#7de2d1] hover:text-[#f9e94e] hover:bg-[#3a4180]"
-                          onClick={() => {
-                            // Handle file selection
-                            const userId = JSON.parse(
-                              localStorage.getItem("googleUser") || "{}"
-                            ).sub;
-                            const filePath = `users/${userId}/${file.name}`;
-                            const { data } = supabase.storage
-                              .from("donshack2025")
-                              .getPublicUrl(filePath);
-
-                            console.log("File public URL:", data.publicUrl);
-
-                            // Fetch the file contents
-                            fetch(data.publicUrl)
-                              .then((response) => {
-                                if (!response.ok) {
-                                  throw new Error(
-                                    `HTTP error! Status: ${response.status}`
-                                  );
-                                }
-                                return response.text();
-                              })
-                              .then((text) => {
-                                console.log("File contents:", text);
-                                // Set the text content and title
-                                setNoteContent(text);
-                                setNoteTitle(file.name.replace(".txt", ""));
-                              })
-                              .catch((error) => {
-                                console.error(
-                                  "Error fetching file contents:",
-                                  error
-                                );
-                              });
-
-                            console.log("Selected file:", file);
-                          }}
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+     
 
             <Card className="bg-[#2a3270] border-[#7de2d1]">
               <CardHeader className="bg-[#7de2d1] text-[#1e2761]">
