@@ -13,10 +13,11 @@ import { toast } from "@/hooks/use-toast"
 interface Question {
   id: number
   question: string
-  type: "true_false" | "multiple_choice"
+  type: "true_false" | "multiple_choice" | "multi_select"
   difficulty: string
   explanation: string
-  correct_answer: boolean | number
+  correct_answer?: boolean | number
+  correct_answers?: number[]
   options?: string[]
 }
 
@@ -27,7 +28,7 @@ interface QuizGeneratorProps {
 export default function QuizGenerator({ content }: QuizGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([])
-  const [userAnswers, setUserAnswers] = useState<Record<number, boolean | number>>({})
+  const [userAnswers, setUserAnswers] = useState<Record<number, boolean | number | number[]>>({})
   const [showResults, setShowResults] = useState(false)
 
   const handleGenerate = async () => {
@@ -53,7 +54,7 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
         },
         body: JSON.stringify({
           text: content,
-          num_questions: 5
+          num_questions: 8
         }),
       })
 
@@ -78,20 +79,43 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
     }
   }
 
-  const handleAnswerChange = (questionId: number, answer: boolean | number) => {
+  const handleAnswerChange = (questionId: number, answer: boolean | number | number[]) => {
     setUserAnswers({
       ...userAnswers,
       [questionId]: answer,
     })
   }
 
+  const handleMultiSelectChange = (questionId: number, optionIndex: number) => {
+    const currentAnswers = (userAnswers[questionId] as number[]) || []
+    const newAnswers = currentAnswers.includes(optionIndex)
+      ? currentAnswers.filter(a => a !== optionIndex)
+      : [...currentAnswers, optionIndex].sort((a, b) => a - b)
+    
+    handleAnswerChange(questionId, newAnswers)
+  }
+
+  const isAnswerCorrect = (question: Question, userAnswer: boolean | number | number[] | undefined): boolean => {
+    if (!userAnswer) return false
+    
+    if (question.type === "multi_select") {
+      const correctAnswers = question.correct_answers || []
+      const userAnswers = userAnswer as number[]
+      return (
+        correctAnswers.length === userAnswers.length &&
+        correctAnswers.every(a => userAnswers.includes(a))
+      )
+    }
+    
+    return userAnswer === question.correct_answer
+  }
+
   const handleSubmitQuiz = () => {
     setShowResults(true)
 
-    const correctAnswers = quizQuestions.filter((q) => {
-      const userAnswer = userAnswers[q.id]
-      return userAnswer === q.correct_answer
-    }).length
+    const correctAnswers = quizQuestions.filter(q => 
+      isAnswerCorrect(q, userAnswers[q.id])
+    ).length
 
     const totalQuestions = quizQuestions.length
 
@@ -102,28 +126,30 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
   }
 
   const handleDownload = () => {
-    // Create quiz content for download
     const quizContent = quizQuestions.map((q, index) => {
       const userAnswer = userAnswers[q.id]
-      const isCorrect = userAnswer === q.correct_answer
+      const isCorrect = isAnswerCorrect(q, userAnswer)
       
       let answerText = ''
       if (q.type === 'true_false') {
         answerText = `Your answer: ${userAnswer ? 'True' : 'False'}\nCorrect answer: ${q.correct_answer ? 'True' : 'False'}`
       } else if (q.type === 'multiple_choice' && q.options) {
         answerText = `Your answer: ${q.options[userAnswer as number]}\nCorrect answer: ${q.options[q.correct_answer as number]}`
+      } else if (q.type === 'multi_select' && q.options) {
+        const userAnswers = (userAnswer as number[] || []).map(i => q.options![i]).join(', ')
+        const correctAnswers = (q.correct_answers || []).map(i => q.options![i]).join(', ')
+        answerText = `Your answers: ${userAnswers}\nCorrect answers: ${correctAnswers}`
       }
 
       return `
 Question ${index + 1}: ${q.question}
 Type: ${q.type}
 Difficulty: ${q.difficulty}
-${q.type === 'multiple_choice' && q.options ? '\nOptions:\n' + q.options.map((opt, i) => `${i + 1}. ${opt}`).join('\n') : ''}
+${q.options ? '\nOptions:\n' + q.options.map((opt, i) => `${i + 1}. ${opt}`).join('\n') : ''}
 ${showResults ? `\n${answerText}\nExplanation: ${q.explanation}` : ''}
 -------------------`
     }).join('\n\n')
 
-    // Create and download file
     const blob = new Blob([quizContent], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -216,14 +242,35 @@ ${showResults ? `\n${answerText}\nExplanation: ${q.explanation}` : ''}
                   </RadioGroup>
                 )}
 
+                {question.type === "multi_select" && question.options && (
+                  <div className="space-y-2">
+                    {question.options.map((option, optionIndex) => {
+                      const isSelected = (userAnswers[question.id] as number[] || []).includes(optionIndex)
+                      return (
+                        <div key={optionIndex} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`${question.id}-${optionIndex}`}
+                            checked={isSelected}
+                            onChange={() => handleMultiSelectChange(question.id, optionIndex)}
+                            disabled={showResults}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <Label htmlFor={`${question.id}-${optionIndex}`}>{option}</Label>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
                 {showResults && (
                   <div className="mt-4 p-3 bg-gray-50 rounded-md">
                     <p className={`text-sm font-medium ${
-                      userAnswers[question.id] === question.correct_answer
+                      isAnswerCorrect(question, userAnswers[question.id])
                         ? 'text-green-600'
                         : 'text-red-600'
                     }`}>
-                      {userAnswers[question.id] === question.correct_answer ? 'Correct!' : 'Incorrect'}
+                      {isAnswerCorrect(question, userAnswers[question.id]) ? 'Correct!' : 'Incorrect'}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">{question.explanation}</p>
                   </div>
