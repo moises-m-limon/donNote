@@ -138,6 +138,7 @@ export default function EnhancedNoteTab() {
             file_name: file.name,
           };
           console.log(fileData);
+          setNoteTitle(file.name);
           // Make the API call
           const response = await fetch(
             "http://127.0.0.1:5000/api/users/files",
@@ -367,9 +368,12 @@ export default function EnhancedNoteTab() {
                   <Button
                     variant="outline"
                     className="w-full border-[#7de2d1] text-[#7de2d1] hover:bg-[#7de2d1] hover:text-[#1e2761]"
-                    onClick={() =>
+                    onClick={() => {
                       document.getElementById("file-upload")?.click()
-                    }
+                      console.log("File upload clicked");
+                      console.log(document.getElementById("file-upload"));
+                      // setNoteTitle(note.title);
+                    }}
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Document
