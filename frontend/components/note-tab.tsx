@@ -682,7 +682,7 @@ export default function EnhancedNoteTab() {
                 <TabsContent value="summarize">
                   <Card className="bg-[#2a3270] border-[#7de2d1]">
                     <CardContent className="pt-6">
-                      <Summarizer content={noteContent} />
+                      <Summarizer content={noteContent} setNoteContent={setNoteContent} />
                     </CardContent>
                   </Card>
                 </TabsContent>

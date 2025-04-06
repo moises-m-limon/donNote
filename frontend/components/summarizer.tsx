@@ -9,16 +9,17 @@ import { toast } from "@/hooks/use-toast"
 import MarkdownReader from "@/components/markdown"
 
 interface SummarizerProps {
-  content: string
+  content: string;
+  setNoteContent: (content: string) => void;
 }
 
-export default function Summarizer({ content }: SummarizerProps) {
+export default function Summarizer({ content, setNoteContent }: SummarizerProps) {
   const [summaryType, setSummaryType] = useState("concise")
   const [isGenerating, setIsGenerating] = useState(false)
   const [summary, setSummary] = useState("")
   const [copied, setCopied] = useState(false)
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!content) {
       toast({
         title: "No content to summarize",
@@ -28,32 +29,40 @@ export default function Summarizer({ content }: SummarizerProps) {
       return
     }
 
-    setIsGenerating(true)
-    setSummary("")
+    try {
+      setIsGenerating(true);
+      const response = await fetch("http://127.0.0.1:5000/api/summarize-text", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          str: content,
+          id: JSON.parse(localStorage.getItem("googleUser") || "{}").sub
+        }),
+      });
 
-    // Simulate API call
-    setTimeout(() => {
-      let generatedSummary = ""
-
-      if (summaryType === "concise") {
-        generatedSummary =
-          "This is a concise summary of the content. It focuses on the main points only and is designed to give you a quick overview of the material."
-      } else if (summaryType === "detailed") {
-        generatedSummary =
-          "This is a detailed summary of the content. It includes main points as well as supporting details, examples, and explanations to provide a comprehensive understanding of the material."
-      } else if (summaryType === "bullet") {
-        generatedSummary =
-          "• Main point 1: Key concept explained briefly\n• Main point 2: Another important concept\n• Main point 3: Final key takeaway\n• Supporting detail: Additional information that helps understand the main points"
+      if (!response.ok) {
+        throw new Error("Failed to generate summary");
       }
 
-      setSummary(generatedSummary)
-      setIsGenerating(false)
+      const data = await response.json();
+      setSummary(data.summary);
+      
+      // Option to set the summary as the note content
+      //setNoteContent(data.summary);
+    
 
+    } catch (error) {
+      console.error("Error generating summary:", error);
       toast({
-        title: "Summary generated",
-        description: `${summaryType.charAt(0).toUpperCase() + summaryType.slice(1)} summary created successfully.`,
-      })
-    }, 1500)
+        title: "Error",
+        description: "Failed to generate summary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   }
 
   const handleCopy = () => {
