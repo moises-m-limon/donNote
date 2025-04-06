@@ -172,6 +172,7 @@ def get_course_files_endpoint(course_id):
             "message": "Files fetched successfully",
             "course_id": course_id,
             "files": file_list
+            print('t')
         }), 200
     except Exception as e:
         print(f"Error fetching files for course {course_id}: {str(e)}")
