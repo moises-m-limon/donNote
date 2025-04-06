@@ -147,6 +147,7 @@ def get_courses():
         try:
             # Get the token from the request body
             data = request.get_json()
+            url = data.get('url')
             token = data.get('token')
             
             if not token:
@@ -156,7 +157,7 @@ def get_courses():
                 }), 401
             
             # Get the courses data
-            courses = get_favorite_courses(CANVAS_BASE_URL, token)
+            courses = get_favorite_courses(url, token)
             # Extract course names and IDs
             course_list = []
             for course in courses:
@@ -183,6 +184,7 @@ def get_course_files_endpoint(course_id):
     try:
         # Get the token from the request body
         data = request.get_json()
+        url = data.get('url')
         token = data.get('token')
         
         if not token:
@@ -192,7 +194,7 @@ def get_course_files_endpoint(course_id):
             }), 401
         
         # Get files for the course using the utility function
-        file_list = get_course_files(course_id, CANVAS_BASE_URL, token)
+        file_list = get_course_files(course_id, url, token)
 
         if file_list is None:
             return jsonify({

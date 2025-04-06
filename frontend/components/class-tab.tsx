@@ -135,7 +135,8 @@ export default function ClassTab() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          token: accessToken
+          token: accessToken,
+          url: "https://canvas.instructure.com"
         })
       })
       const data = await response.json()
@@ -164,7 +165,8 @@ export default function ClassTab() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          token: accessToken
+          token: accessToken,
+          url: "https://canvas.instructure.com"
         })
       })
       const data = await response.json()
