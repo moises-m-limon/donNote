@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 from uuid import uuid4
 from datetime import datetime
-from utils import get_favorite_courses, summerize
+from utils import get_favorite_courses, get_course_files, summerize
 from google import genai
 from prompts import SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT
 
@@ -18,11 +18,9 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
-supabase = create_client(supabase_url=SUPABASE_URL,
-                         supabase_key=SUPABASE_API_KEY)
-
-token = os.getenv("CAVNAS_API_KEY")
-CANVAS_BASE_URL = "https://usfca.instructure.com/"
+CANVAS_BASE_URL = os.getenv("CANVAS_BASE_URL")
+CANVAS_TOKEN = os.getenv("CANVAS_TOKEN")
+supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_API_KEY)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -127,7 +125,7 @@ def get_courses():
     if request.method == 'GET':
         try:
             # Get the courses data
-            courses = get_favorite_courses(CANVAS_BASE_URL, token)
+            courses = get_favorite_courses(CANVAS_BASE_URL, CANVAS_TOKEN)
             # Extract course names and IDs
             course_list = []
             for course in courses:
@@ -148,6 +146,29 @@ def get_courses():
                 "error": str(e)
             }), 500
 
+@app.route('/api/courses/<course_id>/files', methods=['GET'])
+def get_course_files_endpoint(course_id):
+    try:
+        # Get files for the course using the utility function
+        file_list = get_course_files(course_id, CANVAS_BASE_URL, CANVAS_TOKEN)
+        
+        if file_list is None:
+            return jsonify({
+                "message": "Could not fetch files for the course",
+                "error": "Files not found"
+            }), 404
+        
+        return jsonify({
+            "message": "Files fetched successfully",
+            "course_id": course_id,
+            "files": file_list
+        }), 200
+    except Exception as e:
+        print(f"Error fetching files for course {course_id}: {str(e)}")
+        return jsonify({
+            "message": "Failed to fetch files",
+            "error": str(e)
+        }), 500
 
 @app.route('/api/summarize', methods=['POST'])
 def summarize():
