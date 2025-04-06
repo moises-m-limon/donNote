@@ -1,12 +1,16 @@
 name: donNote
 channels:
+  - conda-forge
   - defaults
 dependencies:
-  - python=3.12
-  - requests
+  - python=3.11
   - pip
+  - requests
   - pip:
-    - python-dotenv
-    - supabase
-    - flask
-    - requests
+      - google-genai
+      - python-dotenv
+      - supabase
+      - flask
+      - flask-cors
+      - httpx
+      - pathlib
