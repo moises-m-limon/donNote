@@ -42,6 +42,7 @@ export default function Summarizer({
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [mydata, setMyData] = useState<any>(null);
 
   const handleGenerate = async () => {
     if (!content) {
@@ -71,6 +72,7 @@ export default function Summarizer({
       }
 
       const data = await response.json();
+      setMyData(data);
 
       console.log(data);
 
@@ -87,6 +89,7 @@ export default function Summarizer({
         parsedData = data;
       }
 
+      console.log(parsedData);
       // Transform the response to match our interface
       const transformedData: SummaryResponse = {
         summary: parsedData.summary,
@@ -139,6 +142,8 @@ ${summary.key_points.map((point, index) => `${index + 1}. ${point}`).join("\n")}
 
   return (
     <>
+    
+     <div style={{"color": "white"}}>{JSON.stringify(mydata)}</div>
       <Card>
         <CardHeader className="pb-2">
           <CardTitle>Summarizer</CardTitle>
@@ -175,12 +180,11 @@ ${summary.key_points.map((point, index) => `${index + 1}. ${point}`).join("\n")}
                     </Latex>
                   </div>
                 </div>
-
-                {summary.key_points.length > 0 && (
+                {mydata.bullet_points?.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Key Points</h3>
                     <ol className="list-decimal pl-5 space-y-2">
-                      {summary.key_points.map((point, index) => (
+                      {mydata.bullet_points.map((point: string, index: number) => (
                         <li key={index}>
                           <Latex strict={false} macros={INITIAL_MACROS}>
                             {point}
