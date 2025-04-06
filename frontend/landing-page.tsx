@@ -252,7 +252,7 @@ export default function LandingPage() {
               </div>
             </CardContent>
             <CardFooter>
-              <Link href="/speech-to-text" className="w-full">
+              <Link href="/dashboard" className="w-full">
                 <Button className="w-full bg-[#f9e94e] text-[#1e2761] hover:bg-[#e9d93e]">
                   Open Notes Tool <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
