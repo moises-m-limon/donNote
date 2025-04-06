@@ -45,6 +45,7 @@ export default function Summarizer({
   const [mydata, setMyData] = useState<any>(null);
 
   const handleGenerate = async () => {
+    console.log(content);
     if (!content) {
       toast({
         title: "No content to summarize",
@@ -56,16 +57,19 @@ export default function Summarizer({
 
     try {
       setIsGenerating(true);
-      const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/summarize-text", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          str: content,
-          id: JSON.parse(localStorage.getItem("googleUser") || "{}").sub,
-        }),
-      });
+      const response = await fetch(
+        "https://donnote-427348651859.us-west1.run.app/api/summarize-text",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            str: content,
+            id: JSON.parse(localStorage.getItem("googleUser") || "{}").sub,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to generate summary");
@@ -182,13 +186,15 @@ ${summary.key_points.map((point, index) => `${index + 1}. ${point}`).join("\n")}
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Key Points</h3>
                     <ol className="list-decimal pl-5 space-y-2">
-                      {mydata.bullet_points.map((point: string, index: number) => (
-                        <li key={index}>
-                          <Latex strict={false} macros={INITIAL_MACROS}>
-                            {point}
-                          </Latex>
-                        </li>
-                      ))}
+                      {mydata.bullet_points.map(
+                        (point: string, index: number) => (
+                          <li key={index}>
+                            <Latex strict={false} macros={INITIAL_MACROS}>
+                              {point}
+                            </Latex>
+                          </li>
+                        )
+                      )}
                     </ol>
                   </div>
                 )}
