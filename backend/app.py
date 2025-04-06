@@ -7,7 +7,7 @@ from uuid import uuid4
 from datetime import datetime
 from utils import get_favorite_courses, get_course_files, summerize_file, summerize_text
 from google import genai
-from configs import SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT, SUPABASE_URL, SUPABASE_API_KEY, GEMINI_API_KEY, CANVAS_BASE_URL, CANVAS_TOKEN
+from configs import SUMMARIZE_FILE_SYSTEM_PROMPT, SUMMARIZE_FILE_USER_PROMPT, SUPABASE_URL, SUPABASE_API_KEY, GEMINI_API_KEY, CANVAS_BASE_URL, CANVAS_TOKEN, SUMMARIZE_NOTES_USER_PROMPT, SUMMARIZE_NOTES_SYSTEM_PROMPT
 
 
 supabase = create_client(supabase_url=SUPABASE_URL,
@@ -185,7 +185,7 @@ def summarize_file_1():
 
             # Summarize the file
             summary = summerize_file(client, os.path.join(file_name),
-                                     SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT)
+                                     SUMMARIZE_FILE_USER_PROMPT, SUMMARIZE_FILE_SYSTEM_PROMPT)
 
             print(summary)
 
@@ -215,7 +215,7 @@ def summarize_file():
 
             # Summarize the file
             summary = summerize_text(client, str,
-                                     SUMMARIZE_USER_PROMPT, SUMMARIZE_SYSTEM_PROMPT)
+                                     SUMMARIZE_NOTES_USER_PROMPT, SUMMARIZE_NOTES_SYSTEM_PROMPT)
 
             print(summary)
 
