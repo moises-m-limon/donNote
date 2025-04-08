@@ -47,6 +47,8 @@ interface NoteTabProps {
   setNoteTitle: (title: string) => void;
 }
 
+const url = process.env.DEV === "development" ? "http://127.0.0.1:5000" : "https://donnote-427348651859.us-west1.run.app";
+
 export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNoteTitle }: NoteTabProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [noteMode, setNoteMode] = useState("detailed");
@@ -84,7 +86,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
           return;
         }
 
-        const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/users", {
+        const response = await fetch(url + "/api/users", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -201,7 +203,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
           setNoteTitle(file.name);
           // Make the API call
           const response = await fetch(
-            "https://donnote-427348651859.us-west1.run.app/api/users/files",
+            url + "/api/users/files",
             {
               method: "POST",
               headers: {
@@ -259,7 +261,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
       setSavedNotes((prev) => [...prev, newNote]);
 
       // Save to backend
-      const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/users/files", {
+      const response = await fetch(url + "/api/users/files", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -363,7 +365,7 @@ export default function NoteTab({ noteContent, setNoteContent, noteTitle, setNot
 
     try {
       // You would replace this with your actual API endpoint
-      const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/notes", {
+      const response = await fetch(url + "/api/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

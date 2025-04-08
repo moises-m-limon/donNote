@@ -46,6 +46,8 @@ const CourseCardSkeleton = () => (
   </Card>
 )
 
+const url = process.env.DEV === "development" ? "http://127.0.0.1:5000" : "https://donnote-427348651859.us-west1.run.app";
+
 const FileListSkeleton = () => (
   <div className="space-y-4">
     {[1, 2, 3, 4, 5].map((i) => (
@@ -127,9 +129,8 @@ export default function ClassTab() {
   const fetchCourses = async () => {
     setIsLoading(true)
     try {
-      const baseUrl = 'https://donnote-427348651859.us-west1.run.app'
       
-      const response = await fetch(`${baseUrl}/api/courses`, {
+      const response = await fetch(`${url}/api/courses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -157,9 +158,8 @@ export default function ClassTab() {
   const fetchCourseFiles = async (courseId: string) => {
     setIsLoadingFiles(true)
     try {
-      const baseUrl = 'https://donnote-427348651859.us-west1.run.app'
       
-      const response = await fetch(`${baseUrl}/api/courses/${courseId}/files`, {
+      const response = await fetch(`${url}/api/courses/${courseId}/files`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

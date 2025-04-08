@@ -25,6 +25,8 @@ interface QuizGeneratorProps {
   content: string
 }
 
+const url = process.env.DEV === "development" ? "http://127.0.0.1:5000" : "https://donnote-427348651859.us-west1.run.app";
+
 export default function QuizGenerator({ content }: QuizGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([])
@@ -47,7 +49,7 @@ export default function QuizGenerator({ content }: QuizGeneratorProps) {
     setShowResults(false)
 
     try {
-      const response = await fetch('https://donnote-427348651859.us-west1.run.app/api/generate-questions-text', {
+        const response = await fetch(url + "/api/generate-questions-text", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

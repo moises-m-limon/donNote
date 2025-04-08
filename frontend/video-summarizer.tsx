@@ -35,6 +35,8 @@ interface GoogleUser {
   sub: string;
 }
 
+const url = process.env.DEV === "development" ? "http://127.0.0.1:5000" : "https://donnote-427348651859.us-west1.run.app";
+
 export default function VideoSummarizer() {
   const [searchQuery, setSearchQuery] = useState("");
   const [courses, setCourses] = useState<Course[]>([]);
@@ -71,7 +73,7 @@ export default function VideoSummarizer() {
       try {
 
         setIsLoading(true);
-        const response = await fetch("https://donnote-427348651859.us-west1.run.app/api/courses");
+        const response = await fetch(url + "/api/courses");
 
         if (!response.ok) {
           throw new Error("Failed to fetch courses");

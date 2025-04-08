@@ -34,6 +34,8 @@ interface SummaryResponse {
   key_points: string[];
 }
 
+const url = process.env.DEV === "development" ? "http://127.0.0.1:5000" : "https://donnote-427348651859.us-west1.run.app";
+
 export default function Summarizer({
   content,
   setNoteContent,
@@ -58,7 +60,7 @@ export default function Summarizer({
     try {
       setIsGenerating(true);
       const response = await fetch(
-        "https://donnote-427348651859.us-west1.run.app/api/summarize-text",
+        url + "/api/summarize-text",
         {
           method: "POST",
           headers: {
